@@ -71,7 +71,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
         });
     });
 
-    return <GridComp rows={rows()} columns={columns()} api={setApi} />;
+    return <GridComp data={rows()} columns={columns()} api={setApi} />;
 };
 
 const TextArea: Component<{ row: number, key: string, lang: string, value: string, oninput?: (event: InputEvent) => any }> = (props) => {

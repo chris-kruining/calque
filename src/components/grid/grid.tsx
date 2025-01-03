@@ -31,30 +31,30 @@ const GridContext = createContext<GridContextType<any>>();
 
 const useGrid = () => useContext(GridContext)!;
 
-type GridProps<T extends Record<string, any>> = { class?: string, groupBy?: keyof T, columns: Column<T>[], rows: DataSet<T>, api?: (api: GridApi<T>) => any };
+type GridProps<T extends Record<string, any>> = { class?: string, groupBy?: keyof T, columns: Column<T>[], data: DataSet<T>, api?: (api: GridApi<T>) => any };
 
 export function Grid<T extends Record<string, any>>(props: GridProps<T>) {
     const [table, setTable] = createSignal<TableApi<T>>();
 
-    const rows = createMemo(() => props.rows);
+    const data = createMemo(() => props.data);
     const columns = createMemo(() => props.columns as TableColumn<T>[]);
-    const mutations = createMemo(() => rows().mutations());
+    const mutations = createMemo(() => data().mutations());
 
     const ctx: GridContextType<T> = {
         mutations,
         selection: createMemo(() => table()?.selection() ?? []),
 
         mutate<K extends keyof T>(row: number, column: K, value: T[K]) {
-            rows().mutate(row, column, value);
+            data().mutate(row, column, value);
         },
 
         remove(indices: number[]) {
-            rows().remove(indices);
+            data().remove(indices);
             table()?.clear();
         },
 
         insert(row: T, at?: number) {
-            rows().insert(row, at);
+            data().insert(row, at);
         },
 
         addColumn(column: keyof T, value: T[keyof T]): void {
@@ -81,7 +81,7 @@ export function Grid<T extends Record<string, any>>(props: GridProps<T>) {
     return <GridContext.Provider value={ctx}>
         <Api api={props.api} table={table()} />
 
-        <Table api={setTable} class={`${css.grid} ${props.class}`} rows={rows()} columns={columns()} selectionMode={SelectionMode.Multiple}>{
+        <Table api={setTable} class={`${css.grid} ${props.class}`} rows={data()} columns={columns()} selectionMode={SelectionMode.Multiple}>{
             cellRenderers()
         }</Table>
     </GridContext.Provider>;
@@ -107,7 +107,7 @@ function Api<T extends Record<string, any>>(props: { api: undefined | ((api: Gri
                 gridContext.insert(row, at);
             },
             addColumn(column: keyof T): void {
-                // gridContext.addColumn(column, value);
+                gridContext.addColumn(column, value);
             },
         };
     });

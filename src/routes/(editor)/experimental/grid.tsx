@@ -90,7 +90,7 @@ export default function GridExperiment() {
         </Sidebar>
 
         <div class={css.content}>
-            <Grid class={css.table} api={setApi} rows={rows} columns={columns} groupBy="country" />
+            <Grid class={css.table} api={setApi} data={rows} columns={columns} groupBy="country" />
 
             <fieldset class={css.mutaions}>
                 <legend>Mutations ({mutations().length})</legend>

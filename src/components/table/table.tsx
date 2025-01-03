@@ -73,12 +73,12 @@ export function Table<T extends Record<string, any>>(props: TableProps<T>) {
         <SelectionProvider selection={setSelection} multiSelect={props.selectionMode === SelectionMode.Multiple}>
             <Api api={props.api} />
 
-            <InnerTable class={props.class} summary={props.summary} rows={rows()} />
+            <InnerTable class={props.class} summary={props.summary} data={rows()} />
         </SelectionProvider>
     </TableContext.Provider>;
 };
 
-type InnerTableProps<T extends Record<string, any>> = { class?: string, summary?: string, rows: DataSet<T> };
+type InnerTableProps<T extends Record<string, any>> = { class?: string, summary?: string, data: DataSet<T> };
 
 function InnerTable<T extends Record<string, any>>(props: InnerTableProps<T>) {
     const table = useTable<T>();
@@ -97,7 +97,7 @@ function InnerTable<T extends Record<string, any>>(props: InnerTableProps<T>) {
         <Head />
 
         <tbody class={css.main}>
-            <For each={props.rows.nodes() as DataSetNode<number, T>[]}>{
+            <For each={props.data.nodes() as DataSetNode<number, T>[]}>{
                 node => <Node node={node} depth={0} />
             }</For>
         </tbody>
