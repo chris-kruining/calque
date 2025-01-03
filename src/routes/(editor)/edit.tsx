@@ -74,7 +74,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     const filesContext = useFiles();
 
     const tabs = createMemo(() => filesContext.files().map(({ key, handle }) => {
-        const [api, setApi] = createSignal<GridApi>();
+        const [api, setApi] = createSignal<(GridApi & { addLocale(locale: string): void })>();
         const [entries, setEntries] = createSignal<Entries>(new Map());
         const [files, setFiles] = createSignal<Map<string, { id: string, handle: FileSystemFileHandle }>>(new Map());
 
@@ -379,7 +379,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     </div>;
 };
 
-const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<GridApi | undefined>, entries?: Setter<Entries> }> = (props) => {
+const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<(GridApi & { addLocale(locale: string): void }) | undefined>, entries?: Setter<Entries> }> = (props) => {
     const [entries, setEntries] = createSignal<Entries>(new Map());
     const [locales, setLocales] = createSignal<string[]>([]);
     const [rows, setRows] = createSignal<Entry[]>([]);
@@ -390,7 +390,18 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<Gr
     });
 
     createEffect(() => {
-        props.api?.(api());
+        const a = api();
+
+        if (!a) {
+            return;
+        }
+
+        props.api?.({
+            ...a,
+            addLocale(locale) {
+                setLocales(current => new Set([...current, locale]).values().toArray());
+            },
+        });
     });
 
     createEffect(() => {

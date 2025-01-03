@@ -11,7 +11,7 @@ export interface GridApi {
     readonly selection: Accessor<SelectionItem<number, Entry>[]>;
     remove(indices: number[]): void;
     addKey(key: string): void;
-    addLocale(locale: string): void;
+    // addLocale(locale: string): void;
 };
 
 const groupBy = (rows: DataSetRowNode<number, Entry>[]) => {
@@ -51,6 +51,15 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
 
     createEffect(() => {
         const r = rows();
+        const l = locales();
+
+        r.mutateEach(({ key, ...rest }) => {
+            return ({ key, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) });
+        });
+    });
+
+    createEffect(() => {
+        const r = rows();
 
         props.api?.({
             mutations: r.mutations,
@@ -58,9 +67,6 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             remove: r.remove,
             addKey(key) {
                 r.insert({ key, ...Object.fromEntries(locales().map(l => [l, ''])) });
-            },
-            addLocale(locale) {
-                r.mutateEach(entry => ({ ...entry, [locale]: '' }));
             },
         });
     });
