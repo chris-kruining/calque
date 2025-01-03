@@ -91,8 +91,6 @@ export const createDataSet = <T extends Record<string, any>>(data: T[], initialO
             value = implementation(value as DataSetRowNode<number, T>[]);
         }
 
-        console.log('dataset => nodes', value);
-
         return value as DataSetNode<keyof T, T>[];
     });
 
