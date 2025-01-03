@@ -106,6 +106,7 @@ const TextArea: Component<{ row: number, key: string, lang: string, value: strin
         lang={props.lang}
         placeholder={`${props.key} in ${props.lang}`}
         name={`${props.row}[${props.lang}]`}
+        dir="auto"
         spellcheck={true}
         wrap="soft"
         onkeyup={onKeyUp}
