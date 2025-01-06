@@ -1,9 +1,10 @@
-import { Component, createContext, createEffect, createResource, For, ParentComponent, Show, Suspense, useContext } from "solid-js";
-import css from './colorschemepicker.module.css';
-import { CgDarkMode } from "solid-icons/cg";
+import { Component, createContext, createEffect, createResource, Match, ParentComponent, Show, Suspense, Switch, useContext } from "solid-js";
 import { action, query, useAction } from "@solidjs/router";
 import { useSession } from "vinxi/http";
 import { createStore } from "solid-js/store";
+import { ComboBox } from "./combobox";
+import { WiMoonAltFull, WiMoonAltNew, WiMoonAltFirstQuarter } from "solid-icons/wi";
+import css from './colorschemepicker.module.css';
 
 export enum ColorScheme {
     Auto = 'light dark',
@@ -11,7 +12,7 @@ export enum ColorScheme {
     Dark = 'dark',
 }
 
-const colorSchemes = Object.entries(ColorScheme) as readonly [keyof typeof ColorScheme, ColorScheme][];
+const colorSchemes: Record<ColorScheme, keyof typeof ColorScheme> = Object.fromEntries(Object.entries(ColorScheme).map(([k, v]) => [v, k] as const)) as any;
 
 export interface State {
     colorScheme: ColorScheme;
@@ -88,20 +89,17 @@ export const ColorSchemePicker: Component = (props) => {
     const { theme, setColorScheme, setHue } = useStore();
 
     return <>
-        <label class={css.picker} aria-label="Color scheme picker">
-            <CgDarkMode />
-
-            <select name="color-scheme-picker" onInput={(e) => {
-                if (e.target.value !== theme.colorScheme) {
-                    const nextValue = (e.target.value ?? ColorScheme.Auto) as ColorScheme;
-
-                    setColorScheme(nextValue);
-                }
-            }}>
-                <For each={colorSchemes}>{
-                    ([label, value]) => <option value={value} selected={value === theme.colorScheme}>{label}</option>
-                }</For>
-            </select>
+        <label aria-label="Color scheme picker">
+            <ComboBox id="color-scheme-picker" class={css.picker} value={theme.colorScheme} setValue={(next) => setColorScheme(next())} values={colorSchemes}>{
+                (k, v) => <>
+                    <Switch>
+                        <Match when={k === ColorScheme.Auto}><WiMoonAltFirstQuarter /></Match>
+                        <Match when={k === ColorScheme.Light}><WiMoonAltNew /></Match>
+                        <Match when={k === ColorScheme.Dark}><WiMoonAltFull /></Match>
+                    </Switch>
+                    {v}
+                </>
+            }</ComboBox>
         </label>
 
         <label class={css.hue} aria-label="Hue slider">
