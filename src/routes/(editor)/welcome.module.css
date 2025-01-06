@@ -8,11 +8,14 @@
         grid: 3em / repeat(5, 3em);
     }
 
+    & > h1 {
+        margin-block-end: 0;
+    }
+
     ul {
         display: flex;
         flex-flow: column;
         gap: var(--padding-s);
         padding-inline-start: var(--padding-l);
-        margin: 0;
     }
 }

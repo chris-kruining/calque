@@ -77,8 +77,9 @@
                 }
 
                 & > dialog {
-                    inset-inline-end: anchor(right);
-                    inset-block-start: anchor(bottom);
+                    inset-inline-start: anchor(start);
+                    inset-block-start: anchor(end);
+                    position-try-fallbacks: flip-inline;
 
                     padding: var(--padding-m);
                     border: none;

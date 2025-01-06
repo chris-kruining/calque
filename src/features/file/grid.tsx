@@ -3,6 +3,7 @@ import { debounce, Mutation } from "~/utilities";
 import { Column, GridApi as GridCompApi, Grid as GridComp } from "~/components/grid";
 import { createDataSet, DataSetNode, DataSetRowNode } from "~/components/table";
 import { SelectionItem } from "../selectable";
+import { useI18n } from "../i18n";
 import css from "./grid.module.css"
 
 export type Entry = { key: string } & { [lang: string]: string };
@@ -29,12 +30,14 @@ const groupBy = (rows: DataSetRowNode<number, Entry>[]) => {
 }
 
 export function Grid(props: { class?: string, rows: Entry[], locales: string[], api?: (api: GridApi) => any }) {
+    const { t } = useI18n();
+
     const rows = createMemo(() => createDataSet<Entry>(props.rows, { group: { by: 'key', with: groupBy } }));
     const locales = createMemo(() => props.locales);
     const columns = createMemo<Column<Entry>[]>(() => [
         {
             id: 'key',
-            label: 'Key',
+            label: t('feature.file.grid.key'),
             renderer: ({ value }) => value.split('.').at(-1),
         },
         ...locales().map<Column<Entry>>(lang => ({
