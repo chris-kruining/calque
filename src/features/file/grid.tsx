@@ -11,7 +11,8 @@ export interface GridApi {
     readonly selection: Accessor<SelectionItem<number, Entry>[]>;
     remove(indices: number[]): void;
     addKey(key: string): void;
-    // addLocale(locale: string): void;
+    selectAll(): void;
+    clearSelection(): void;
 };
 
 const groupBy = (rows: DataSetRowNode<number, Entry>[]) => {
@@ -67,6 +68,12 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             remove: r.remove,
             addKey(key) {
                 r.insert({ key, ...Object.fromEntries(locales().map(l => [l, ''])) });
+            },
+            selectAll() {
+                api()?.selectAll();
+            },
+            clearSelection() {
+                api()?.clearSelection();
             },
         });
     });

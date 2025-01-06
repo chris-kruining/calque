@@ -275,7 +275,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             api()?.selectAll();
         }, { key: 'a', modifier: Modifier.Control }),
         clearSelection: createCommand('clear selection', () => {
-            api()?.clear();
+            api()?.clearSelection();
         }),
         delete: createCommand('delete selected items', () => {
             const { selection, remove } = api() ?? {};
