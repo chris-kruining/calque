@@ -5,7 +5,8 @@ import nl from '~/i18n/nl-NL.json';
 import { makePersisted } from '@solid-primitives/storage';
 
 type RawDictionary = typeof en;
-type Dictionary = Flatten<RawDictionary>;
+export type Dictionary = Flatten<RawDictionary>;
+export type DictionaryKey = keyof Dictionary;
 export type Locale = 'en-GB' | 'nl-NL';
 
 const dictionaries = {

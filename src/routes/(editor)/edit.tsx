@@ -58,7 +58,7 @@ export default function Edit(props: ParentProps) {
         }
     });
 
-    const open = createCommand('open folder', async () => {
+    const open = createCommand('page.edit.command.open', async () => {
         const directory = await window.showDirectoryPicker({ mode: 'readwrite' });
 
         filesContext.open(directory);
@@ -236,18 +236,18 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     });
 
     const commands = {
-        open: createCommand(t('page.edit.command.open'), async () => {
+        open: createCommand('page.edit.command.open', async () => {
             const directory = await window.showDirectoryPicker({ mode: 'readwrite' });
 
             await filesContext.open(directory);
         }, { key: 'o', modifier: Modifier.Control }),
-        close: createCommand(t('page.edit.command.close'), async () => {
+        close: createCommand('page.edit.command.close', async () => {
             filesContext.remove('__root__');
         }),
-        closeTab: createCommand(t('page.edit.command.closeTab'), async (id: string) => {
+        closeTab: createCommand('page.edit.command.closeTab', async (id: string) => {
             filesContext.remove(id);
         }, { key: 'w', modifier: Modifier.Control | (isInstalledPWA ? Modifier.None : Modifier.Alt) }),
-        save: createCommand(t('page.edit.command.save'), async () => {
+        save: createCommand('page.edit.command.save', async () => {
             await Promise.allSettled(mutatedData().map(async ([file, data]) => {
                 // TODO :: add the newly created file to the known files list to that the save file picker is not shown again on subsequent saves
                 const handle = file.existing ? file.handle : await window.showSaveFilePicker({ suggestedName: file.name, excludeAcceptAllOption: true, types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }] });
@@ -259,7 +259,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
                 stream.close();
             }));
         }, { key: 's', modifier: Modifier.Control }),
-        saveAs: createCommand(t('page.edit.command.saveAs'), (handle?: FileSystemFileHandle) => {
+        saveAs: createCommand('page.edit.command.saveAs', (handle?: FileSystemFileHandle) => {
             console.log('save as ...', handle);
 
             window.showSaveFilePicker({
@@ -273,13 +273,13 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             });
 
         }, { key: 's', modifier: Modifier.Control | Modifier.Shift }),
-        selectAll: createCommand(t('page.edit.command.selectAll'), () => {
+        selectAll: createCommand('page.edit.command.selectAll', () => {
             api()?.selectAll();
         }, { key: 'a', modifier: Modifier.Control }),
-        clearSelection: createCommand(t('page.edit.command.clearSelection'), () => {
+        clearSelection: createCommand('page.edit.command.clearSelection', () => {
             api()?.clearSelection();
         }),
-        delete: createCommand(t('page.edit.command.delete'), () => {
+        delete: createCommand('page.edit.command.delete', () => {
             const { selection, remove } = api() ?? {};
 
             if (!selection || !remove) {
@@ -288,7 +288,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
             remove(selection().map(s => s.key));
         }, { key: 'delete', modifier: Modifier.None }),
-        insertKey: createCommand(t('page.edit.command.insertKey'), async () => {
+        insertKey: createCommand('page.edit.command.insertKey', async () => {
             const formData = await newKeyPrompt()?.showModal();
             const key = formData?.get('key')?.toString();
 
@@ -298,7 +298,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
             api()?.addKey(key);
         }),
-        insertLanguage: createCommand(t('page.edit.command.insertLanguage'), async () => {
+        insertLanguage: createCommand('page.edit.command.insertLanguage', async () => {
             const formData = await newLanguagePrompt()?.showModal();
             const locale = formData?.get('locale')?.toString();
 

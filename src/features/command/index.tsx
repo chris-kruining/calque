@@ -1,4 +1,5 @@
 import { Accessor, children, Component, createContext, createEffect, createMemo, For, JSX, ParentComponent, ParentProps, Show, useContext } from 'solid-js';
+import { Dictionary, DictionaryKey, useI18n } from '../i18n';
 
 interface CommandContextType {
     set(commands: CommandType<any>[]): void;
@@ -115,8 +116,11 @@ const Context = <T extends (...args: any[]) => any = any>(props: ParentProps<{ f
 };
 
 const Handle: Component<{ command: CommandType }> = (props) => {
+    const { t } = useI18n();
+
     return <samp>
-        {props.command.label}
+        {String(t(props.command.label))}
+
         <Show when={props.command.shortcut}>{
             shortcut => {
                 const modifier = shortcut().modifier;
@@ -150,7 +154,7 @@ export enum Modifier {
 
 export interface CommandType<T extends (...args: any[]) => any = any> {
     (...args: Parameters<T>): Promise<ReturnType<T>>;
-    label: string;
+    label: DictionaryKey;
     shortcut?: {
         key: string;
         modifier: Modifier;
@@ -159,7 +163,7 @@ export interface CommandType<T extends (...args: any[]) => any = any> {
     with<A extends any[], B extends any[]>(this: (this: ThisParameterType<T>, ...args: [...A, ...B]) => ReturnType<T>, ...args: A): CommandType<(...args: B) => ReturnType<T>>;
 }
 
-export const createCommand = <T extends (...args: any[]) => any>(label: string, command: T, shortcut?: CommandType['shortcut']): CommandType<T> => {
+export const createCommand = <T extends (...args: any[]) => any>(label: DictionaryKey, command: T, shortcut?: CommandType['shortcut']): CommandType<T> => {
     return Object.defineProperties(((...args: Parameters<T>) => command(...args)) as any, {
         label: {
             value: label,
@@ -172,7 +176,7 @@ export const createCommand = <T extends (...args: any[]) => any>(label: string, 
             writable: false,
         },
         withLabel: {
-            value(label: string) {
+            value(label: DictionaryKey) {
                 return createCommand(label, command, shortcut);
             },
             configurable: false,
@@ -188,6 +192,6 @@ export const createCommand = <T extends (...args: any[]) => any>(label: string, 
     });
 };
 
-export const noop = createCommand('noop', () => { });
+export const noop = createCommand('noop' as any, () => { });
 
 export { Context } from './contextMenu';
