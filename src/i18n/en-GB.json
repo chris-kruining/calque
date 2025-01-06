@@ -1,0 +1,37 @@
+{
+    "page": {
+        "welcome": {
+            "title": "Hi, welcome!",
+            "subtitle": "Lets get started",
+            "edit": "Start editing",
+            "instructions": "Read the instructions",
+            "about": "Abut this app"
+        },
+        "edit": {
+            "menu": {
+                "file": "File",
+                "edit": "Edit",
+                "selection": "Selection"
+            },
+            "command": {
+                "open": "Open folder",
+                "close": "Close folder",
+                "closeTab": "Close tab",
+                "save": "Save",
+                "saveAs": "Save as ...",
+                "selectAll": "Select all",
+                "clearSelection": "Clear selection",
+                "insertKey": "Insert new key",
+                "insertLanguage": "Insert new language",
+                "delete": "Delete selected items"
+            }
+        }
+    },
+    "feature": {
+        "file": {
+            "grid": {
+                "key": "Key"
+            }
+        }
+    }
+}

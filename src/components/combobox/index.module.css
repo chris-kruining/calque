@@ -1,0 +1,76 @@
+.box {
+    display: contents;
+    inline-size: max-content;
+
+    &:has(> :popover-open) > .button {
+        background-color: var(--surface-500);
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}
+
+.button {
+    display: grid;
+    grid-template-columns: inherit;
+    place-items: center start;
+
+    inline-size: max-content;
+
+    padding: var(--padding-m);
+    background-color: transparent;
+    border: none;
+    border-radius: var(--radii-m);
+    font-size: 1rem;
+
+    cursor: pointer;
+}
+
+.dialog {
+    display: none;
+    grid-template-columns: inherit;
+
+    inset-inline-start: anchor(start);
+    inset-block-start: anchor(end);
+    position-try-fallbacks: flip-inline;
+
+    inline-size: anchor-size(self-inline);
+    background-color: var(--surface-500);
+    padding: var(--padding-m);
+    border: none;
+    box-shadow: var(--shadow-2);
+
+    &:popover-open {
+        display: grid;
+    }
+
+    & > header {
+        display: grid;
+        grid-column: 1 / -1;
+
+        gap: var(--padding-s);
+    }
+
+    & > main {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        row-gap: var(--padding-s);
+    }
+}
+
+.option {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    place-items: center start;
+
+    border-radius: var(--radii-m);
+    padding: var(--padding-s);
+    margin-inline: calc(-1 * var(--padding-s));
+
+    cursor: pointer;
+
+    &.selected {
+        background-color: oklch(from var(--info) l c h / .1);
+    }
+}

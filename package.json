@@ -1,10 +1,13 @@
 {
   "name": "calque",
   "dependencies": {
+    "@solid-primitives/i18n": "^2.1.1",
+    "@solid-primitives/storage": "^4.2.1",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.2",
     "@solidjs/start": "^1.0.10",
     "dexie": "^4.0.10",
+    "flag-icons": "^7.2.3",
     "iterator-helpers-polyfill": "^3.0.1",
     "sitemap": "^8.0.0",
     "solid-icons": "^1.1.0",

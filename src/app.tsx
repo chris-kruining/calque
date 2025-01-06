@@ -2,8 +2,9 @@ import { MetaProvider } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
-import "./app.css";
 import { ThemeProvider } from "./components/colorschemepicker";
+import { I18nProvider } from "./features/i18n";
+import "./app.css";
 
 export default function App() {
   return (
@@ -11,9 +12,11 @@ export default function App() {
       root={props => (
         <MetaProvider>
           <ThemeProvider>
-            <Suspense>{props.children}</Suspense>
+            <I18nProvider>
+              <Suspense>{props.children}</Suspense>
+            </I18nProvider>
           </ThemeProvider>
-        </MetaProvider>
+        </ MetaProvider>
       )}
     >
       <FileRoutes />

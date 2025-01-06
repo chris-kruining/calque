@@ -23,7 +23,7 @@ export interface TableApi<T extends Record<string, any>> {
     readonly rows: Accessor<DataSet<T>>;
     readonly columns: Accessor<Column<T>[]>;
     selectAll(): void;
-    clear(): void;
+    clearSelection(): void;
 }
 
 interface TableContextType<T extends Record<string, any>> {
@@ -123,7 +123,7 @@ function Api<T extends Record<string, any>>(props: { api: undefined | ((api: Tab
         selectAll() {
             selectionContext.selectAll();
         },
-        clear() {
+        clearSelection() {
             selectionContext.clear();
         },
     };

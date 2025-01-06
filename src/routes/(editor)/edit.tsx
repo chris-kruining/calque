@@ -10,6 +10,7 @@ import { Tab, Tabs } from "~/components/tabs";
 import { isServer } from "solid-js/web";
 import { Prompt, PromptApi } from "~/components/prompt";
 import EditBlankImage from '~/assets/edit-blank.svg'
+import { useI18n } from "~/features/i18n";
 import css from "./edit.module.css";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
@@ -72,6 +73,7 @@ export default function Edit(props: ParentProps) {
 
 const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     const filesContext = useFiles();
+    const { t } = useI18n();
 
     const tabs = createMemo(() => filesContext.files().map(({ key, handle }) => {
         const [api, setApi] = createSignal<(GridApi & { addLocale(locale: string): void })>();
@@ -234,18 +236,18 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     });
 
     const commands = {
-        open: createCommand('open folder', async () => {
+        open: createCommand(t('page.edit.command.open'), async () => {
             const directory = await window.showDirectoryPicker({ mode: 'readwrite' });
 
             await filesContext.open(directory);
         }, { key: 'o', modifier: Modifier.Control }),
-        close: createCommand('close folder', async () => {
+        close: createCommand(t('page.edit.command.close'), async () => {
             filesContext.remove('__root__');
         }),
-        closeTab: createCommand('close tab', async (id: string) => {
+        closeTab: createCommand(t('page.edit.command.closeTab'), async (id: string) => {
             filesContext.remove(id);
         }, { key: 'w', modifier: Modifier.Control | (isInstalledPWA ? Modifier.None : Modifier.Alt) }),
-        save: createCommand('save', async () => {
+        save: createCommand(t('page.edit.command.save'), async () => {
             await Promise.allSettled(mutatedData().map(async ([file, data]) => {
                 // TODO :: add the newly created file to the known files list to that the save file picker is not shown again on subsequent saves
                 const handle = file.existing ? file.handle : await window.showSaveFilePicker({ suggestedName: file.name, excludeAcceptAllOption: true, types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }] });
@@ -257,7 +259,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
                 stream.close();
             }));
         }, { key: 's', modifier: Modifier.Control }),
-        saveAs: createCommand('save as', (handle?: FileSystemFileHandle) => {
+        saveAs: createCommand(t('page.edit.command.saveAs'), (handle?: FileSystemFileHandle) => {
             console.log('save as ...', handle);
 
             window.showSaveFilePicker({
@@ -271,13 +273,13 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             });
 
         }, { key: 's', modifier: Modifier.Control | Modifier.Shift }),
-        selectAll: createCommand('select all', () => {
+        selectAll: createCommand(t('page.edit.command.selectAll'), () => {
             api()?.selectAll();
         }, { key: 'a', modifier: Modifier.Control }),
-        clearSelection: createCommand('clear selection', () => {
-            api()?.clear();
+        clearSelection: createCommand(t('page.edit.command.clearSelection'), () => {
+            api()?.clearSelection();
         }),
-        delete: createCommand('delete selected items', () => {
+        delete: createCommand(t('page.edit.command.delete'), () => {
             const { selection, remove } = api() ?? {};
 
             if (!selection || !remove) {
@@ -286,7 +288,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
             remove(selection().map(s => s.key));
         }, { key: 'delete', modifier: Modifier.None }),
-        inserNewKey: createCommand('insert new key', async () => {
+        insertKey: createCommand(t('page.edit.command.insertKey'), async () => {
             const formData = await newKeyPrompt()?.showModal();
             const key = formData?.get('key')?.toString();
 
@@ -296,7 +298,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
             api()?.addKey(key);
         }),
-        inserNewLanguage: createCommand('insert new language', async () => {
+        insertLanguage: createCommand(t('page.edit.command.insertLanguage'), async () => {
             const formData = await newLanguagePrompt()?.showModal();
             const locale = formData?.get('locale')?.toString();
 
@@ -316,27 +318,27 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
         }</Context.Menu>
 
         <Menu.Root>
-            <Menu.Item label="file">
+            <Menu.Item label={t('page.edit.menu.file')}>
                 <Menu.Item command={commands.open} />
 
-                <Menu.Item command={commands.save} />
+                <Menu.Item command={commands.close} />
 
                 <Menu.Separator />
 
-                <Menu.Item command={commands.close} />
+                <Menu.Item command={commands.save} />
             </Menu.Item>
 
-            <Menu.Item label="edit">
-                <Menu.Item command={commands.inserNewKey} />
+            <Menu.Item label={t('page.edit.menu.edit')}>
+                <Menu.Item command={commands.insertKey} />
 
-                <Menu.Item command={commands.inserNewLanguage} />
+                <Menu.Item command={commands.insertLanguage} />
 
                 <Menu.Separator />
 
                 <Menu.Item command={commands.delete} />
             </Menu.Item>
 
-            <Menu.Item label="selection">
+            <Menu.Item label={t('page.edit.menu.selection')}>
                 <Menu.Item command={commands.selectAll} />
 
                 <Menu.Item command={commands.clearSelection} />

@@ -1,0 +1,37 @@
+{
+    "page": {
+        "welcome": {
+            "title": "Hoi, welkom!",
+            "subtitle": "Laten we beginnen",
+            "edit": "Begin met bewerken",
+            "instructions": "Lees de instructies",
+            "about": "Over deze app"
+        },
+        "edit": {
+            "menu": {
+                "file": "Bestand",
+                "edit": "Bewerken",
+                "selection": "Selectie"
+            },
+            "command": {
+                "open": "Map openen",
+                "close": "Map sluiten",
+                "closeTab": "Tabblad sluiten",
+                "save": "Opslaan",
+                "saveAs": "Opslaan als ...",
+                "selectAll": "Selecteer alles",
+                "clearSelection": "Selectie leeg maken",
+                "insertKey": "Voeg nieuwe sleutel toe",
+                "insertLanguage": "Voeg nieuwe taal toe",
+                "delete": "Verwijder geselecteerde items"
+            }
+        }
+    },
+    "feature": {
+        "file": {
+            "grid": {
+                "key": "Sleutel"
+            }
+        }
+    }
+}

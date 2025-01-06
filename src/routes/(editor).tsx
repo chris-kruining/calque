@@ -1,5 +1,5 @@
 import { Link, Meta, Title } from "@solidjs/meta";
-import { Component, createMemo, createSignal, ParentProps, Show } from "solid-js";
+import { Component, createMemo, createSignal, ErrorBoundary, ParentProps, Show } from "solid-js";
 import { FilesProvider } from "~/features/file";
 import { CommandPalette, CommandPaletteApi, Menu, MenuProvider } from "~/features/menu";
 import { A, RouteDefinition, useBeforeLeave } from "@solidjs/router";
@@ -9,6 +9,7 @@ import { getRequestEvent } from "solid-js/web";
 import { HttpHeader } from "@solidjs/start";
 import { FaSolidPalette } from "solid-icons/fa";
 import css from "./editor.module.css";
+import { LocalePicker } from "~/features/i18n";
 
 const event = getRequestEvent();
 
@@ -76,6 +77,8 @@ export default function Editor(props: ParentProps) {
                 <Menu.Mount />
 
                 <section class={css.right}>
+                    <LocalePicker />
+
                     <div class={css.themeMenu}>
                         <button class={css.themeMenuButton} id={`${themeMenuId}-button`} popoverTarget={`${themeMenuId}-dialog`} title="Open theme picker menu">
                             <FaSolidPalette />
@@ -89,15 +92,11 @@ export default function Editor(props: ParentProps) {
             </nav>
 
             <section>
-                <FilesProvider>
-                    {props.children}
-                </FilesProvider>
-
-                {/* <ErrorBoundary fallback={err => <ErrorComp error={err} />}>
+                <ErrorBoundary fallback={err => <ErrorComp error={err} />}>
                     <FilesProvider>
                         {props.children}
                     </FilesProvider>
-                </ErrorBoundary> */}
+                </ErrorBoundary>
             </section>
         </main>
 
