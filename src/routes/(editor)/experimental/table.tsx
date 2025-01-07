@@ -72,11 +72,11 @@ export default function TableExperiment() {
     });
 
     createEffect(() => {
-        setStore('sorting', rows().sorting());
+        setStore('sorting', rows().sorting);
     });
 
     createEffect(() => {
-        setStore('grouping', rows().grouping());
+        setStore('grouping', rows().grouping);
     });
 
     return <div class={css.root}>
