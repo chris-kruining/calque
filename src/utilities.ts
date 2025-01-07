@@ -10,6 +10,19 @@ export const splitAt = (subject: string, index: number): readonly [string, strin
     return [subject.slice(0, index), subject.slice(index + 1)];
 };
 
+const decodeRegex = /(?<!\\)\\(t|b|n|r|f|'|"|u[0-9a-f]{1,4})/gi;
+const decodeReplacer = (_: any, char: string) => ({
+    t: '\t',
+    b: '\b',
+    n: '\n',
+    r: '\r',
+    f: '\f',
+    "'": '\'',
+    '"': '\"',
+    u: String.fromCharCode(Number.parseInt(char.slice(1))),
+}[char.charAt(0)] ?? '');
+export const decode = (subject: string): string => subject.replace(decodeRegex, decodeReplacer);
+
 export const debounce = <T extends (...args: any[]) => void>(callback: T, delay: number): ((...args: Parameters<T>) => void) => {
     let handle: ReturnType<typeof setTimeout> | undefined;
 

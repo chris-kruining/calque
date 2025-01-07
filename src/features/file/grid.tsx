@@ -1,5 +1,5 @@
 import { Accessor, Component, createEffect, createMemo, createSignal } from "solid-js";
-import { debounce, Mutation } from "~/utilities";
+import { debounce, decode, Mutation } from "~/utilities";
 import { Column, GridApi as GridCompApi, Grid as GridComp } from "~/components/grid";
 import { createDataSet, DataSetNode, DataSetRowNode } from "~/components/table";
 import { SelectionItem } from "../selectable";
@@ -109,10 +109,12 @@ const TextArea: Component<{ row: number, key: string, lang: string, value: strin
         mutate();
     };
 
+    const value = createMemo(() => decode(props.value));
+
     return <textarea
         ref={setElement}
         class={css.textarea}
-        value={props.value}
+        value={value()}
         lang={props.lang}
         placeholder={`${props.key} in ${props.lang}`}
         name={`${props.row}[${props.lang}]`}
