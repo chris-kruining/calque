@@ -10,6 +10,7 @@ import { FaSolidPalette } from "solid-icons/fa";
 import { LocalePicker } from "~/features/i18n";
 import { ColorScheme, ColorSchemePicker, getState, useTheme } from "~/features/theme";
 import css from "./editor.module.css";
+import { Dropdown } from "~/components/dropdown";
 
 const event = getRequestEvent();
 
@@ -79,15 +80,9 @@ export default function Editor(props: ParentProps) {
                 <section class={css.right}>
                     <LocalePicker />
 
-                    <div class={css.themeMenu}>
-                        <button class={css.themeMenuButton} id={`${themeMenuId}-button`} popoverTarget={`${themeMenuId}-dialog`} title="Open theme picker menu">
-                            <FaSolidPalette />
-                        </button>
-
-                        <dialog class={css.themeMenuDialog} id={`${themeMenuId}-dialog`} popover anchor={`${themeMenuId}-button`}>
-                            <ColorSchemePicker />
-                        </dialog>
-                    </div>
+                    <Dropdown id={themeMenuId} class={css.themeMenu} text={<FaSolidPalette />}>
+                        <ColorSchemePicker />
+                    </Dropdown>
                 </section>
             </nav>
 
