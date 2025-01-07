@@ -59,7 +59,7 @@
 
                 & > button {
                     display: flex;
-                    justify-content: center;
+                    place-items: center;
                     padding: var(--padding-m);
                     border: none;
                     border-radius: var(--radii-m);
