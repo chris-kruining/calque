@@ -114,12 +114,13 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             switch (m.kind) {
                 case MutarionKind.Update: {
                     const entry = entries.get(index as any)!;
-                    return { kind: MutarionKind.Update, key: entry.key, lang, file: files.get(lang)! };
+                    return { kind: MutarionKind.Update, key: entry.key, lang, file: files.get(lang)!, value: m.value };
                 }
 
                 case MutarionKind.Create: {
                     if (typeof m.value === 'object') {
-                        return Object.entries(m.value).map(([lang, value]) => ({ kind: MutarionKind.Create, key: m.key, lang, file: files.get(lang)!, value }));
+                        const { key, ...locales } = m.value;
+                        return Object.entries(locales).map(([lang, value]) => ({ kind: MutarionKind.Create, key, lang, file: files.get(lang)!, value }));
                     }
 
                     const entry = entries.get(index as any)!;
