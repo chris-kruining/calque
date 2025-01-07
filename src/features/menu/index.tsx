@@ -75,7 +75,7 @@ const useMenu = () => {
     return context;
 }
 
-type ItemProps<T extends (...args: any[]) => any> = { label: string, children: JSX.Element, command: undefined } | { command: CommandType<T> };
+type ItemProps<T extends (...args: any[]) => any> = { label: string, children: JSX.Element, command?: undefined } | { command: CommandType<T> };
 
 function Item<T extends (...args: any[]) => any>(props: ItemProps<T>) {
     const id = createUniqueId();
