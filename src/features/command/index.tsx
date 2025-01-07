@@ -118,7 +118,7 @@ const Context = <T extends (...args: any[]) => any = any>(props: ParentProps<{ f
 const Handle: Component<{ command: CommandType }> = (props) => {
     const { t } = useI18n();
 
-    return <samp>
+    return <>
         {String(t(props.command.label))}
 
         <Show when={props.command.shortcut}>{
@@ -131,15 +131,15 @@ const Handle: Component<{ command: CommandType }> = (props) => {
                     [Modifier.Alt]: 'Alt',
                 };
 
-                return <>&nbsp;
+                return <samp>
                     <For each={Object.values(Modifier).filter((m): m is number => typeof m === 'number').filter(m => modifier & m)}>{
                         (m) => <><kbd>{modifierMap[m]}</kbd>+</>
                     }</For>
                     <kbd>{shortcut().key}</kbd>
-                </>;
+                </samp>;
             }
         }</Show>
-    </samp>;
+    </>;
 };
 
 export const Command = { Root, Handle, Add, Context };
