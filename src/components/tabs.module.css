@@ -58,6 +58,10 @@
                 color: var(--text-1);
             }
         }
+
+        &:empty {
+            display: none;
+        }
     }
 
     .tab {
