@@ -1,16 +1,16 @@
 import { useNavigate } from "@solidjs/router";
 import { createEffect } from "solid-js";
-import { useFiles } from "~/features/file";
+import { isServer } from "solid-js/web";
+import { useFiles } from "~/features/file/context";
 
 export default function Index() {
   const navigate = useNavigate();
   const files = useFiles();
 
   createEffect(() => {
-    const loading = files.loading();
     const root = files.root();
 
-    if (loading) {
+    if (isServer) {
       return;
     }
 
