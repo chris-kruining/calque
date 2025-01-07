@@ -1,5 +1,6 @@
 import { createMemo, createSignal, For, JSX, Setter, createEffect, Show } from "solid-js";
 import css from './index.module.css';
+import { FaSolidAngleDown } from "solid-icons/fa";
 
 interface ComboBoxProps<T, K extends string> {
     id: string;
@@ -8,6 +9,7 @@ interface ComboBoxProps<T, K extends string> {
     setValue?: Setter<K>;
     values: Record<K, T>;
     open?: boolean;
+    showCaret?: boolean;
     children: (key: K, value: T) => JSX.Element;
     filter?: (query: string, key: K, value: T) => boolean;
 }
@@ -30,6 +32,8 @@ export function ComboBox<T, K extends string>(props: ComboBoxProps<T, K>) {
         return entries;
     });
 
+    const showCaret = createMemo(() => props.showCaret ?? true);
+
     createEffect(() => {
         props.setValue?.(() => value());
     });
@@ -41,6 +45,10 @@ export function ComboBox<T, K extends string>(props: ComboBoxProps<T, K>) {
     return <section class={`${css.box} ${props.class}`}>
         <button id={`${props.id}_button`} popoverTarget={`${props.id}_dialog`} class={css.button}>
             {props.children(value(), props.values[value()])}
+
+            <Show when={showCaret()}>
+                <FaSolidAngleDown class={css.caret} />
+            </Show>
         </button>
 
         <dialog ref={setDialog} id={`${props.id}_dialog`} anchor={`${props.id}_button`} popover class={css.dialog} onToggle={e => setOpen(e.newState === 'open')}>

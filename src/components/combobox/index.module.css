@@ -10,6 +10,7 @@
 }
 
 .button {
+    position: relative;
     display: grid;
     grid-template-columns: inherit;
     place-items: center start;
@@ -23,6 +24,22 @@
     font-size: 1rem;
 
     cursor: pointer;
+
+    &:hover {
+        background-color: var(--surface-700);
+    }
+
+    &:has(> .caret) {
+        padding-inline-end: calc(1em + (2 * var(--padding-m)));
+    }
+
+    & > .caret {
+        position: absolute;
+        inset-inline-end: var(--padding-m);
+        inset-block-start: 50%;
+        translate: 0 -50%;
+        inline-size: 1em;
+    }
 }
 
 .dialog {

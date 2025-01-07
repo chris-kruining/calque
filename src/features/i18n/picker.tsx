@@ -16,6 +16,7 @@ export const LocalePicker: Component<LocalePickerProps> = (props) => {
         value={locale()}
         setValue={setLocale}
         values={locales}
+        showCaret={false}
     >
         {(locale, { flag, label }) => <Dynamic component={flag} lang={locale} aria-label={label} class={css.flag} />}
     </ComboBox>
