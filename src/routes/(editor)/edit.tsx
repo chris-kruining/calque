@@ -11,6 +11,7 @@ import { isServer } from "solid-js/web";
 import { Prompt, PromptApi } from "~/components/prompt";
 import EditBlankImage from '~/assets/edit-blank.svg'
 import { useI18n } from "~/features/i18n";
+import { makePersisted } from "@solid-primitives/storage";
 import css from "./edit.module.css";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
@@ -91,7 +92,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
         return ({ key, handle, api, setApi, entries, setEntries, files });
     }));
-    const [active, setActive] = createSignal<string>();
+    const [active, setActive] = makePersisted(createSignal<string>(), { name: 'edit__aciveTab' });
     const [contents, setContents] = createSignal<Map<string, Map<string, string>>>(new Map());
     const [tree, setFiles] = createSignal<FolderEntry>(emptyFolder);
     const [newKeyPrompt, setNewKeyPrompt] = createSignal<PromptApi>();
@@ -367,12 +368,13 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
                     return <Context.Handle classList={{ [css.mutated]: mutated() }} onDblClick={() => {
                         const folder = file().directory;
                         filesContext?.set(folder.name, folder);
+                        setActive(folder.name);
                     }}>{file().name}</Context.Handle>;
                 },
             ] as const}</Tree>
         </Sidebar>
 
-        <Tabs class={css.content} active={setActive} onClose={commands.closeTab}>
+        <Tabs class={css.content} active={active()} setActive={setActive} onClose={commands.closeTab}>
             <For each={tabs()}>{
                 ({ key, handle, setApi, setEntries }) => <Tab id={key} label={handle.name} closable>
                     <Content directory={handle} api={setApi} entries={setEntries} />
