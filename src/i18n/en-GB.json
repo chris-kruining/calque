@@ -29,6 +29,17 @@
                 "insertKey": "Insert new key",
                 "insertLanguage": "Insert new language",
                 "delete": "Delete selected items"
+            },
+            "prompt": {
+                "newKey": {
+                    "title": "Which key do you want to create?",
+                    "placeholder": "Name of the new key",
+                    "description": "Hint: use `.` to denote nested keys,\ni.e. `this.is.some.key` would be a key that is four levels deep."
+                },
+                "newLanguage": {
+                    "title": "Which language do you want to add?",
+                    "placeholder": "Locale code, i.e. en-GB for Britisch English"
+                }
             }
         }
     },

@@ -346,12 +346,12 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             </Menu.Item>
         </Menu.Root>
 
-        <Prompt api={setNewKeyPrompt} title="Which key do you want to create?" description={<>hint: use <code>.</code> to denote nested keys,<br /> i.e. <code>this.is.some.key</code> would be a key that is four levels deep</>}>
-            <input name="key" placeholder="name of new key ()" value="keyF.some.deeper.nested.value" />
+        <Prompt api={setNewKeyPrompt} title={t('page.edit.prompt.newKey.title')} description={t('page.edit.prompt.newKey.description')}>
+            <input name="key" placeholder={t('page.edit.prompt.newKey.placeholder')} />
         </Prompt>
 
-        <Prompt api={setNewLanguagePrompt}>
-            <input name="locale" placeholder="locale code, i.e. en-GB" value="fr-FR" />
+        <Prompt api={setNewLanguagePrompt} title={t('page.edit.prompt.newLanguage.title')}>
+            <input name="locale" placeholder={t('page.edit.prompt.newLanguage.placeholder')} />
         </Prompt>
 
         <Sidebar as="aside" label={tree().name} class={css.sidebar}>
