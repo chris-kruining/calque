@@ -1,18 +1,14 @@
-import { Component, createContext, createEffect, createResource, Match, ParentComponent, Show, Suspense, Switch, useContext } from "solid-js";
 import { action, query, useAction } from "@solidjs/router";
-import { useSession } from "vinxi/http";
+import { createContext, createEffect, createResource, ParentComponent, Show, Suspense, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
-import { Dropdown } from "./dropdown";
-import { WiMoonAltFull, WiMoonAltNew, WiMoonAltFirstQuarter } from "solid-icons/wi";
-import css from './colorschemepicker.module.css';
+import { useSession } from "vinxi/http";
+
 
 export enum ColorScheme {
     Auto = 'light dark',
     Light = 'light',
     Dark = 'dark',
 }
-
-const colorSchemes: Record<ColorScheme, keyof typeof ColorScheme> = Object.fromEntries(Object.entries(ColorScheme).map(([k, v]) => [v, k] as const)) as any;
 
 export interface State {
     colorScheme: ColorScheme;
@@ -50,7 +46,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType>();
 
-const useStore = () => useContext(ThemeContext)!;
+export const useStore = () => useContext(ThemeContext)!;
 
 export const useTheme = () => {
     const ctx = useContext(ThemeContext);
@@ -83,27 +79,4 @@ export const ThemeProvider: ParentComponent = (props) => {
             </ThemeContext.Provider>;
         }}</Show>
     </Suspense>;
-};
-
-export const ColorSchemePicker: Component = (props) => {
-    const { theme, setColorScheme, setHue } = useStore();
-
-    return <>
-        <label aria-label="Color scheme picker">
-            <Dropdown id="color-scheme-picker" class={css.picker} value={theme.colorScheme} setValue={(next) => setColorScheme(next())} values={colorSchemes}>{
-                (k, v) => <>
-                    <Switch>
-                        <Match when={k === ColorScheme.Auto}><WiMoonAltFirstQuarter /></Match>
-                        <Match when={k === ColorScheme.Light}><WiMoonAltNew /></Match>
-                        <Match when={k === ColorScheme.Dark}><WiMoonAltFull /></Match>
-                    </Switch>
-                    {v}
-                </>
-            }</Dropdown>
-        </label>
-
-        <label class={css.hue} aria-label="Hue slider">
-            <input type="range" min="0" max="360" value={theme.hue} onInput={e => setHue(e.target.valueAsNumber)} />
-        </label>
-    </>;
 };

@@ -4,12 +4,12 @@ import { FilesProvider } from "~/features/file";
 import { Menu, MenuProvider } from "~/features/menu";
 import { A, RouteDefinition, useBeforeLeave } from "@solidjs/router";
 import { CommandPalette, CommandPaletteApi, createCommand, Modifier } from "~/features/command";
-import { ColorScheme, ColorSchemePicker, getState, useTheme } from "~/components/colorschemepicker";
 import { getRequestEvent } from "solid-js/web";
 import { HttpHeader } from "@solidjs/start";
 import { FaSolidPalette } from "solid-icons/fa";
-import css from "./editor.module.css";
 import { LocalePicker } from "~/features/i18n";
+import { ColorScheme, ColorSchemePicker, getState, useTheme } from "~/features/theme";
+import css from "./editor.module.css";
 
 const event = getRequestEvent();
 
