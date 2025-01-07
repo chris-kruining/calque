@@ -100,6 +100,8 @@ export function SelectionProvider<K, T extends object>(props: ParentProps<{ sele
         },
         clear() {
             setState('selection', []);
+            internal.modifier[1](Modifier.None);
+            internal.latest[1](undefined);
         },
         isSelected(key) {
             return createMemo(() => state.selection.includes(key));
@@ -256,6 +258,8 @@ export function selectable<K, T extends object>(element: HTMLElement, options: A
             if (withRange) return SelectionMode.Replace;
             return SelectionMode.Normal;
         })();
+
+        console.log(modifier(), withRange, mode);
 
         context.select(withRange ? createRange(latest(), element) : [key], { mode });
 
