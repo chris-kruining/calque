@@ -1,7 +1,8 @@
 import { Accessor, Component, createEffect, createMemo, createSignal, For, JSX, Show } from "solid-js";
-import { CommandType, useCommands } from ".";
-import css from "./palette.module.css";
 import { useI18n } from "../i18n";
+import { CommandType } from "./command";
+import { useCommands } from "./context";
+import css from "./palette.module.css";
 
 export interface CommandPaletteApi {
     readonly open: Accessor<boolean>;
@@ -168,10 +169,3 @@ function SearchableList<T>(props: SearchableListProps<T>): JSX.Element {
 let keyCounter = 0;
 const createUniqueId = () => `key-${keyCounter++}`;
 
-declare module "solid-js" {
-    namespace JSX {
-        interface HTMLAttributes<T> {
-            anchor?: string | undefined;
-        }
-    }
-}

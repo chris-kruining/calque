@@ -1,5 +1,5 @@
 import { Accessor, Component, createContext, createEffect, createMemo, createSignal, For, JSX, ParentComponent, splitProps, useContext } from "solid-js";
-import { CommandType } from "./index";
+import { CommandType } from "./command";
 import css from "./contextMenu.module.css";
 
 interface ContextMenuType {

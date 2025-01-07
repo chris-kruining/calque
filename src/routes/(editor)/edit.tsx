@@ -4,7 +4,7 @@ import { Sidebar } from "~/components/sidebar";
 import { emptyFolder, FolderEntry, walk as fileTreeWalk, Tree } from "~/components/filetree";
 import { Menu } from "~/features/menu";
 import { Grid, load, useFiles } from "~/features/file";
-import { Command, CommandType, Context, createCommand, Modifier, noop, useCommands } from "~/features/command";
+import { Command, CommandType, Context, createCommand, Modifier } from "~/features/command";
 import { Entry, GridApi } from "~/features/file/grid";
 import { Tab, Tabs } from "~/components/tabs";
 import { isServer } from "solid-js/web";
