@@ -50,7 +50,7 @@ export function Grid<T extends Record<string, any>>(props: GridProps<T>) {
 
         remove(indices: number[]) {
             data().remove(indices);
-            table()?.clear();
+            table()?.clearSelection();
         },
 
         insert(row: T, at?: number) {
