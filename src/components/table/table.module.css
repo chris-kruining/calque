@@ -29,7 +29,7 @@
         white-space: nowrap;
     }
 
-    & :is(.cell:first-child, .checkbox + .cell) {
+    & *:is(.cell:first-child, .checkbox + .cell) {
         position: sticky;
         inset-inline-start: 1px;
         padding-inline-start: calc(var(--depth, 0) * (1em + var(--padding-s)) + var(--padding-m));
