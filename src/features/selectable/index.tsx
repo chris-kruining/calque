@@ -217,15 +217,15 @@ export function selectable<K, T extends object>(element: HTMLElement, options: A
         }
 
         if (!a) {
-            return [b!.dataset.selecatableKey! as K];
+            return [b!.dataset.selectionKey! as K];
         }
 
         if (!b) {
-            return [a!.dataset.selecatableKey! as K];
+            return [a!.dataset.selectionKey! as K];
         }
 
         if (a === b) {
-            return [a!.dataset.selecatableKey! as keyof T];
+            return [a!.dataset.selectionKey! as K];
         }
 
         const nodes = internal.selectables[0]();
@@ -233,7 +233,7 @@ export function selectable<K, T extends object>(element: HTMLElement, options: A
         const bIndex = nodes.indexOf(b);
         const selection = nodes.slice(Math.min(aIndex, bIndex), Math.max(aIndex, bIndex) + 1);
 
-        return selection.map(n => internal.keyMap.get(n.dataset.selecatableKey!)!);
+        return selection.map(n => internal.keyMap.get(n.dataset.selectionKey!)!);
     };
 
     createRenderEffect(() => {
