@@ -1,6 +1,5 @@
 .box {
     display: contents;
-    inline-size: max-content;
 
     &:has(> :popover-open) > .button {
         background-color: var(--surface-500);
@@ -15,7 +14,9 @@
     grid-template-columns: inherit;
     place-items: center start;
 
-    inline-size: max-content;
+    /* Make sure the height of the button does not collapse when it is empty */
+    block-size: 1em;
+    box-sizing: content-box;
 
     padding: var(--padding-m);
     background-color: transparent;
@@ -44,13 +45,14 @@
 
 .dialog {
     display: none;
+    position: relative;
     grid-template-columns: inherit;
 
     inset-inline-start: anchor(start);
     inset-block-start: anchor(end);
-    position-try-fallbacks: flip-inline;
+    position-try-fallbacks: flip-block, flip-inline;
 
-    inline-size: anchor-size(self-inline);
+    /* inline-size: anchor-size(self-inline); */
     background-color: var(--surface-500);
     padding: var(--padding-m);
     border: none;

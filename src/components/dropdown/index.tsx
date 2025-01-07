@@ -1,12 +1,12 @@
 import { createMemo, createSignal, For, JSX, Setter, createEffect, Show } from "solid-js";
-import css from './index.module.css';
 import { FaSolidAngleDown } from "solid-icons/fa";
+import css from './index.module.css';
 
 interface DropdownProps<T, K extends string> {
     id: string;
     class?: string;
-    value: K;
-    setValue?: Setter<K>;
+    value?: K;
+    setValue?: Setter<K | undefined>;
     values: Record<K, T>;
     open?: boolean;
     showCaret?: boolean;
@@ -16,7 +16,7 @@ interface DropdownProps<T, K extends string> {
 
 export function Dropdown<T, K extends string>(props: DropdownProps<T, K>) {
     const [dialog, setDialog] = createSignal<HTMLDialogElement>();
-    const [value, setValue] = createSignal<K>(props.value);
+    const [key, setKey] = createSignal<K | undefined>(props.value);
     const [open, setOpen] = createSignal<boolean>(props.open ?? false);
     const [query, setQuery] = createSignal<string>('');
 
@@ -35,7 +35,7 @@ export function Dropdown<T, K extends string>(props: DropdownProps<T, K>) {
     const showCaret = createMemo(() => props.showCaret ?? true);
 
     createEffect(() => {
-        props.setValue?.(() => value());
+        props.setValue?.(() => key());
     });
 
     createEffect(() => {
@@ -44,7 +44,13 @@ export function Dropdown<T, K extends string>(props: DropdownProps<T, K>) {
 
     return <section class={`${css.box} ${props.class}`}>
         <button id={`${props.id}_button`} popoverTarget={`${props.id}_dialog`} class={css.button}>
-            {props.children(value(), props.values[value()])}
+            <Show when={key()}>{
+                key => {
+                    const value = createMemo(() => props.values[key()]);
+
+                    return <>{props.children(key(), value())}</>;
+                }
+            }</Show>
 
             <Show when={showCaret()}>
                 <FaSolidAngleDown class={css.caret} />
@@ -61,10 +67,10 @@ export function Dropdown<T, K extends string>(props: DropdownProps<T, K>) {
             <main>
                 <For each={values()}>{
                     ([k, v]) => {
-                        const selected = createMemo(() => value() === k);
+                        const selected = createMemo(() => key() === k);
 
                         return <span class={`${css.option} ${selected() ? css.selected : ''}`} onpointerdown={() => {
-                            setValue(() => k);
+                            setKey(() => k);
                             dialog()?.hidePopover();
                         }}>{props.children(k, v)}</span>;
                     }
