@@ -19,6 +19,7 @@ export function Select<T, K extends string>(props: SelectProps<T, K>) {
     const [key, setKey] = createSignal<K>(props.value);
     const [query, setQuery] = createSignal<string>('');
 
+    const showCaret = createMemo(() => props.showCaret ?? true);
     const values = createMemo(() => {
         let entries = Object.entries<T>(props.values) as [K, T][];
         const filter = props.filter;
@@ -43,7 +44,7 @@ export function Select<T, K extends string>(props: SelectProps<T, K>) {
         }
     }</Show>
 
-    return <Dropdown api={setDropdown} id={props.id} class={`${css.box} ${props.class}`} showCaret={props.showCaret} open={props.open} text={text}>
+    return <Dropdown api={setDropdown} id={props.id} class={`${css.box} ${props.class}`} showCaret={showCaret()} open={props.open} text={text}>
         <Show when={props.filter !== undefined}>
             <header>
                 <input value={query()} onInput={e => setQuery(e.target.value)} />

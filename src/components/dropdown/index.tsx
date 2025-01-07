@@ -21,8 +21,6 @@ export function Dropdown(props: DropdownProps) {
     const [dialog, setDialog] = createSignal<HTMLDialogElement>();
     const [open, setOpen] = createSignal<boolean>(props.open ?? false);
 
-    const showCaret = createMemo(() => props.showCaret ?? true);
-
     createEffect(() => {
         dialog()?.[open() ? 'showPopover' : 'hidePopover']();
     });
@@ -42,7 +40,7 @@ export function Dropdown(props: DropdownProps) {
         <button id={`${props.id}_button`} popoverTarget={`${props.id}_dialog`} class={css.button}>
             {props.text}
 
-            <Show when={showCaret()}>
+            <Show when={props.showCaret}>
                 <FaSolidAngleDown class={css.caret} />
             </Show>
         </button>

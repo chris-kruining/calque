@@ -1,4 +1,6 @@
 .root {
+    display: grid;
+    grid-auto-flow: column;
     margin: 0;
     padding: 0;
 
@@ -7,7 +9,7 @@
     }
 }
 
-.item {
+:is(.item, .child > button) {
     padding: var(--padding-m) var(--padding-l);
 
     background-color: inherit;
@@ -22,26 +24,12 @@
     }
 }
 
-.child {
-    position: fixed;
-    inset-inline-start: anchor(self-start);
-    inset-block-start: anchor(end);
-
+.child > dialog {
     grid-template-columns: auto auto;
     place-content: start;
 
     gap: var(--padding-m);
     padding: var(--padding-m) 0;
-    inline-size: max-content;
-
-    background-color: var(--surface-500);
-    border: 1px solid var(--surface-300);
-    border-block-start-width: 0;
-    margin: unset;
-
-    &:popover-open {
-        display: grid;
-    }
 
     & > .separator {
         grid-column: span 2;
@@ -62,8 +50,4 @@
             background-color: var(--surface-600);
         }
     }
-}
-
-:popover-open + .item {
-    background-color: var(--surface-500);
 }

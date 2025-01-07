@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 import { createStore } from "solid-js/store";
 import { CommandType, Command, useCommands } from "../command";
 import css from "./index.module.css";
+import { Dropdown, DropdownApi } from "~/components/dropdown";
 
 export interface MenuContextType {
     ref: Accessor<Node | undefined>;
@@ -102,77 +103,39 @@ const Separator: Component = (props) => {
 const Root: ParentComponent<{}> = (props) => {
     const menuContext = useMenu();
     const commandContext = useCommands();
-    const [current, setCurrent] = createSignal<HTMLElement>();
     const items = children(() => props.children).toArray() as unknown as (Item | ItemWithChildren)[];
 
-    menuContext.addItems(items)
-
-    const close = () => {
-        const el = current();
-
-        if (el) {
-            el.hidePopover();
-
-            setCurrent(undefined);
-        }
-    };
-
-    const onExecute = (command?: CommandType) => {
-        return command
-            ? (e: Event) => {
-                close();
-
-                return commandContext?.execute(command, e);
-            }
-            : () => { }
-    };
-
-    const Child: Component<{ command: CommandType }> = (props) => {
-        return <button class={css.item} type="button" onpointerdown={onExecute(props.command)}>
-            <Command.Handle command={props.command} />
-        </button>
-    };
+    menuContext.addItems(items);
 
     return <Portal mount={menuContext.ref()}>
         <For each={items}>{
             item => <Switch>
                 <Match when={item.kind === 'node' ? item as ItemWithChildren : undefined}>{
-                    item => <>
-                        <div
-                            class={css.child}
-                            id={`child-${item().id}`}
-                            style={`position-anchor: --menu-${item().id};`}
-                            popover
-                            on:toggle={(e: ToggleEvent) => {
-                                if (e.newState === 'open' && e.target !== null) {
-                                    return setCurrent(e.target as HTMLElement);
-                                }
-                            }}
-                        >
+                    item => {
+                        const [dropdown, setDropdown] = createSignal<DropdownApi>();
+
+                        return <Dropdown api={setDropdown} class={css.child} id={`child-${item().id}`} text={item().label}>
                             <For each={item().children}>{
                                 child => <Switch>
                                     <Match when={child.kind === 'leaf' ? child as Item : undefined}>{
-                                        item => <Child command={item().command} />
+                                        item => <button class={css.item} type="button" onpointerdown={e => {
+                                            commandContext?.execute(item().command, e);
+                                            dropdown()?.hide();
+                                        }}>
+                                            <Command.Handle command={item().command} />
+                                        </button>
                                     }</Match>
 
                                     <Match when={child.kind === 'separator'}><hr class={css.separator} /></Match>
-                                </Switch>
-                            }</For>
-                        </div>
-
-                        <button
-                            class={css.item}
-                            type="button"
-                            popovertarget={`child-${item().id}`}
-                            style={`anchor-name: --menu-${item().id};`}
-                        >
-                            {item().label}
-                        </button>
-                    </>
+                                </Switch>}</For>
+                        </Dropdown>;
+                    }
                 }</Match>
 
                 <Match when={item.kind === 'leaf' ? item as Item : undefined}>{
-                    item => <Child command={item().command} />
+                    item => <button class={css.item} type="button" onpointerdown={e => commandContext?.execute(item().command, e)}>
+                        <Command.Handle command={item().command} />
+                    </button>
                 }</Match>
             </Switch>
         }</For>
