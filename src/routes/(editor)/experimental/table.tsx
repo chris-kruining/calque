@@ -82,12 +82,6 @@ export default function TableExperiment() {
     return <div class={css.root}>
         <Sidebar as="aside" label={'Filters'} class={css.sidebar}>
             <fieldset>
-                <legend>Commands</legend>
-
-                <Command.Handle command={createCommand('kaas', () => { }, { key: 'k', modifier: Modifier.Control })} />
-            </fieldset>
-
-            <fieldset>
                 <legend>table properties</legend>
 
                 <label>
