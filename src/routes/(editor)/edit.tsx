@@ -365,7 +365,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
                 file => {
                     const mutated = createMemo(() => mutatedFiles().values().find(({ id }) => id === file().id) !== undefined);
 
-                    return <Context.Handle classList={{ [css.mutated]: mutated() }} onDblClick={() => {
+                    return <Context.Handle class={`${mutated() ? css.mutated : ''}`} onDblClick={() => {
                         const folder = file().directory;
                         filesContext?.set(folder.name, folder);
                         setActive(folder.name);
