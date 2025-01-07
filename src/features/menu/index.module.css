@@ -61,11 +61,6 @@
         &:hover {
             background-color: var(--surface-600);
         }
-
-        & > sub {
-            color: var(--text-2);
-            text-align: end;
-        }
     }
 }
 

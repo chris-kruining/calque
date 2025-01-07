@@ -36,6 +36,7 @@
   --text-bold: 700;
   --text-bolder: 900;
 
+  --text-xs: .7rem;
   --text-s: .8rem;
   --text-m: 1rem;
   --text-l: 1.25rem;
@@ -162,6 +163,7 @@ del {
 }
 
 kbd {
+  display: inline-block;
   background-color: var(--surface-600);
   border-radius: var(--radii-m);
   border: 1px solid var(--surface-500);
@@ -169,9 +171,7 @@ kbd {
     0 1px 1px rgba(0, 0, 0, 0.2),
     0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
   color: var(--text-2);
-  display: inline-block;
-  font-size: var(--text-s);
-  font-weight: var(--text-bold);
+  font-size: var(--text-xs);
   line-height: 1;
   padding: var(--padding-xs) var(--padding-s);
   white-space: nowrap;
