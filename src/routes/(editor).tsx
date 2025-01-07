@@ -1,9 +1,9 @@
 import { Link, Meta, Title } from "@solidjs/meta";
 import { Component, createMemo, createSignal, ErrorBoundary, ParentProps, Show } from "solid-js";
 import { FilesProvider } from "~/features/file";
-import { CommandPalette, CommandPaletteApi, Menu, MenuProvider } from "~/features/menu";
+import { Menu, MenuProvider } from "~/features/menu";
 import { A, RouteDefinition, useBeforeLeave } from "@solidjs/router";
-import { createCommand, Modifier } from "~/features/command";
+import { CommandPalette, CommandPaletteApi, createCommand, Modifier } from "~/features/command";
 import { ColorScheme, ColorSchemePicker, getState, useTheme } from "~/components/colorschemepicker";
 import { getRequestEvent } from "solid-js/web";
 import { HttpHeader } from "@solidjs/start";

@@ -1,10 +1,17 @@
 import { Accessor, children, Component, createContext, createEffect, createMemo, For, JSX, ParentComponent, ParentProps, Show, useContext } from 'solid-js';
 import { Dictionary, DictionaryKey, useI18n } from '../i18n';
+import { createStore, produce } from 'solid-js/store';
 
 interface CommandContextType {
+    readonly commands: Accessor<CommandType[]>;
     set(commands: CommandType<any>[]): void;
     addContextualArguments<T extends (...args: any[]) => any = any>(command: CommandType<T>, target: EventTarget, args: Accessor<Parameters<T>>): void;
     execute<T extends (...args: any[]) => any = any>(command: CommandType<T>, event: Event): void;
+}
+
+interface CommandContextStateType {
+    commands: CommandType[];
+    contextualArguments: Map<CommandType, WeakMap<EventTarget, Accessor<any[]>>>;
 }
 
 const CommandContext = createContext<CommandContextType>();
@@ -12,29 +19,30 @@ const CommandContext = createContext<CommandContextType>();
 export const useCommands = () => useContext(CommandContext);
 
 const Root: ParentComponent<{ commands: CommandType[] }> = (props) => {
-    // const commands = () => props.commands ?? [];
-    const contextualArguments = new Map<CommandType, WeakMap<EventTarget, Accessor<any[]>>>();
-    const commands = new Set<CommandType<any>>();
+    const [store, setStore] = createStore<CommandContextStateType>({ commands: [], contextualArguments: new Map() });
 
     const context = {
-        set(c: CommandType<any>[]): void {
-            for (const command of c) {
-                commands.add(command);
-            }
+        commands: createMemo(() => store.commands),
+
+        set(commands: CommandType<any>[]): void {
+            setStore('commands', existing => new Set([...existing, ...commands]).values().toArray());
         },
 
         addContextualArguments<T extends (...args: any[]) => any = any>(command: CommandType<T>, target: EventTarget, args: Accessor<Parameters<T>>): void {
-            if (contextualArguments.has(command) === false) {
-                contextualArguments.set(command, new WeakMap());
-            }
+            setStore('contextualArguments', prev => {
+                if (prev.has(command) === false) {
+                    prev.set(command, new WeakMap());
+                }
 
-            contextualArguments.get(command)?.set(target, args);
+                prev.get(command)?.set(target, args);
+
+                return new Map(prev);
+            })
         },
 
         execute<T extends (...args: any[]) => any = any>(command: CommandType<T>, event: Event): boolean | undefined {
             const args = ((): Parameters<T> => {
-
-                const contexts = contextualArguments.get(command);
+                const contexts = store.contextualArguments.get(command);
 
                 if (contexts === undefined) {
                     return [] as any;
@@ -72,7 +80,7 @@ const Root: ParentComponent<{ commands: CommandType[] }> = (props) => {
             (e.metaKey ? 1 : 0) << 2 |
             (e.altKey ? 1 : 0) << 3;
 
-        const command = commands.values().find(c => c.shortcut?.key === key && (c.shortcut.modifier === undefined || c.shortcut.modifier === modifiers));
+        const command = store.commands.values().find(c => c.shortcut?.key === key && (c.shortcut.modifier === undefined || c.shortcut.modifier === modifiers));
 
         if (command === undefined) {
             return;
@@ -86,9 +94,9 @@ const Root: ParentComponent<{ commands: CommandType[] }> = (props) => {
     </CommandContext.Provider>;
 };
 
-const Add: Component<{ command: CommandType<any> } | { commands: CommandType<any>[] }> = (props) => {
+const Add: Component<{ command: CommandType, commands: undefined } | { commands: CommandType[] }> = (props) => {
     const context = useCommands();
-    const commands = createMemo<CommandType<any>[]>(() => props.commands ?? [props.command]);
+    const commands = createMemo<CommandType[]>(() => props.commands ?? [props.command]);
 
     createEffect(() => {
         context?.set(commands());
@@ -152,7 +160,7 @@ export enum Modifier {
     Alt = 1 << 3,
 }
 
-export interface CommandType<T extends (...args: any[]) => any = any> {
+export interface CommandType<T extends (...args: any[]) => any = (...args: any[]) => any> {
     (...args: Parameters<T>): Promise<ReturnType<T>>;
     label: DictionaryKey;
     shortcut?: {
@@ -194,4 +202,7 @@ export const createCommand = <T extends (...args: any[]) => any>(label: Dictiona
 
 export const noop = createCommand('noop' as any, () => { });
 
+
+export type { CommandPaletteApi } from './palette';
 export { Context } from './contextMenu';
+export { CommandPalette } from './palette';
