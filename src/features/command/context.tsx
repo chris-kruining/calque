@@ -128,7 +128,7 @@ const Handle: Component<{ command: CommandType }> = (props) => {
     const { t } = useI18n();
 
     return <>
-        {String(t(props.command.label))}
+        {String(t(props.command.label) ?? props.command.label)}
 
         <Show when={props.command.shortcut}>{
             shortcut => {
