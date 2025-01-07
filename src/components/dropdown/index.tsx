@@ -2,7 +2,7 @@ import { createMemo, createSignal, For, JSX, Setter, createEffect, Show } from "
 import css from './index.module.css';
 import { FaSolidAngleDown } from "solid-icons/fa";
 
-interface ComboBoxProps<T, K extends string> {
+interface DropdownProps<T, K extends string> {
     id: string;
     class?: string;
     value: K;
@@ -14,7 +14,7 @@ interface ComboBoxProps<T, K extends string> {
     filter?: (query: string, key: K, value: T) => boolean;
 }
 
-export function ComboBox<T, K extends string>(props: ComboBoxProps<T, K>) {
+export function Dropdown<T, K extends string>(props: DropdownProps<T, K>) {
     const [dialog, setDialog] = createSignal<HTMLDialogElement>();
     const [value, setValue] = createSignal<K>(props.value);
     const [open, setOpen] = createSignal<boolean>(props.open ?? false);

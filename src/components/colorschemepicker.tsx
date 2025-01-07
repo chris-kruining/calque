@@ -2,7 +2,7 @@ import { Component, createContext, createEffect, createResource, Match, ParentCo
 import { action, query, useAction } from "@solidjs/router";
 import { useSession } from "vinxi/http";
 import { createStore } from "solid-js/store";
-import { ComboBox } from "./combobox";
+import { Dropdown } from "./dropdown";
 import { WiMoonAltFull, WiMoonAltNew, WiMoonAltFirstQuarter } from "solid-icons/wi";
 import css from './colorschemepicker.module.css';
 
@@ -90,7 +90,7 @@ export const ColorSchemePicker: Component = (props) => {
 
     return <>
         <label aria-label="Color scheme picker">
-            <ComboBox id="color-scheme-picker" class={css.picker} value={theme.colorScheme} setValue={(next) => setColorScheme(next())} values={colorSchemes}>{
+            <Dropdown id="color-scheme-picker" class={css.picker} value={theme.colorScheme} setValue={(next) => setColorScheme(next())} values={colorSchemes}>{
                 (k, v) => <>
                     <Switch>
                         <Match when={k === ColorScheme.Auto}><WiMoonAltFirstQuarter /></Match>
@@ -99,7 +99,7 @@ export const ColorSchemePicker: Component = (props) => {
                     </Switch>
                     {v}
                 </>
-            }</ComboBox>
+            }</Dropdown>
         </label>
 
         <label class={css.hue} aria-label="Hue slider">
