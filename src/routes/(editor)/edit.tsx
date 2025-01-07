@@ -242,7 +242,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             await filesContext.open(directory);
         }, { key: 'o', modifier: Modifier.Control }),
         close: createCommand('page.edit.command.close', async () => {
-            filesContext.remove('__root__');
+            await filesContext.close();
         }),
         closeTab: createCommand('page.edit.command.closeTab', async (id: string) => {
             filesContext.remove(id);

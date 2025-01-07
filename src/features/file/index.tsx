@@ -30,7 +30,8 @@ interface FilesContextType {
     readonly root: Accessor<FileSystemDirectoryHandle | undefined>,
     readonly loading: Accessor<boolean>,
 
-    open(directory: FileSystemDirectoryHandle): void;
+    open(directory: FileSystemDirectoryHandle): Promise<void>;
+    close(): Promise<void>;
     get(key: string): Accessor<FileSystemDirectoryHandle | undefined>
     set(key: string, handle: FileSystemDirectoryHandle): Promise<void>;
     remove(key: string): Promise<void>;
@@ -138,6 +139,12 @@ export const FilesProvider: ParentComponent = (props) => {
             setState('root', directory);
 
             await internal.set(ROOT, directory);
+        },
+
+        async close() {
+            setState('root', undefined);
+
+            await internal.remove(ROOT);
         },
 
         get(key: string): Accessor<FileSystemDirectoryHandle | undefined> {
