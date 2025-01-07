@@ -28,7 +28,7 @@ export default function Editor(props: ParentProps) {
     const lightness = createMemo(() => colorScheme() === ColorScheme.Light ? .9 : .2);
 
     const commands = [
-        createCommand('open command palette', () => {
+        createCommand('shell.command.openCommandPalette', () => {
             commandPalette()?.show();
         }, { key: 'p', modifier: Modifier.Control | Modifier.Shift }),
     ];

@@ -1,4 +1,9 @@
 {
+    "shell": {
+        "command": {
+            "openCommandPalette": "Open command palette"
+        }
+    },
     "page": {
         "welcome": {
             "title": "Hi, welcome!",
