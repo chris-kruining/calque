@@ -259,8 +259,6 @@ export function selectable<K, T extends object>(element: HTMLElement, options: A
             return SelectionMode.Normal;
         })();
 
-        console.log(modifier(), withRange, mode);
-
         context.select(withRange ? createRange(latest(), element) : [key], { mode });
 
         if (!withRange) {
