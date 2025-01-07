@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, JSX, Setter, createEffect, Show } from "solid-js";
-import { FaSolidAngleDown } from "solid-icons/fa";
+import { Dropdown, DropdownApi } from "../dropdown";
 import css from './index.module.css';
 
 interface SelectProps<T, K extends string> {
@@ -15,9 +15,8 @@ interface SelectProps<T, K extends string> {
 }
 
 export function Select<T, K extends string>(props: SelectProps<T, K>) {
-    const [dialog, setDialog] = createSignal<HTMLDialogElement>();
+    const [dropdown, setDropdown] = createSignal<DropdownApi>();
     const [key, setKey] = createSignal<K>(props.value);
-    const [open, setOpen] = createSignal<boolean>(props.open ?? false);
     const [query, setQuery] = createSignal<string>('');
 
     const values = createMemo(() => {
@@ -32,50 +31,36 @@ export function Select<T, K extends string>(props: SelectProps<T, K>) {
         return entries;
     });
 
-    const showCaret = createMemo(() => props.showCaret ?? true);
-
     createEffect(() => {
         props.setValue?.(() => key());
     });
 
-    createEffect(() => {
-        dialog()?.[open() ? 'showPopover' : 'hidePopover']();
-    });
+    const text = <Show when={key()}>{
+        key => {
+            const value = createMemo(() => props.values[key()]);
 
-    return <section class={`${css.box} ${props.class}`}>
-        <button id={`${props.id}_button`} popoverTarget={`${props.id}_dialog`} class={css.button}>
-            <Show when={key()}>{
-                key => {
-                    const value = createMemo(() => props.values[key()]);
+            return <>{props.children(key(), value())}</>;
+        }
+    }</Show>
 
-                    return <>{props.children(key(), value())}</>;
+    return <Dropdown api={setDropdown} id={props.id} class={`${css.box} ${props.class}`} showCaret={props.showCaret} open={props.open} text={text}>
+        <Show when={props.filter !== undefined}>
+            <header>
+                <input value={query()} onInput={e => setQuery(e.target.value)} />
+            </header>
+        </Show>
+
+        <main>
+            <For each={values()}>{
+                ([k, v]) => {
+                    const selected = createMemo(() => key() === k);
+
+                    return <span class={`${css.option} ${selected() ? css.selected : ''}`} onpointerdown={() => {
+                        setKey(() => k);
+                        dropdown()?.hide();
+                    }}>{props.children(k, v)}</span>;
                 }
-            }</Show>
-
-            <Show when={showCaret()}>
-                <FaSolidAngleDown class={css.caret} />
-            </Show>
-        </button>
-
-        <dialog ref={setDialog} id={`${props.id}_dialog`} anchor={`${props.id}_button`} popover class={css.dialog} onToggle={e => setOpen(e.newState === 'open')}>
-            <Show when={props.filter !== undefined}>
-                <header>
-                    <input value={query()} onInput={e => setQuery(e.target.value)} />
-                </header>
-            </Show>
-
-            <main>
-                <For each={values()}>{
-                    ([k, v]) => {
-                        const selected = createMemo(() => key() === k);
-
-                        return <span class={`${css.option} ${selected() ? css.selected : ''}`} onpointerdown={() => {
-                            setKey(() => k);
-                            dialog()?.hidePopover();
-                        }}>{props.children(k, v)}</span>;
-                    }
-                }</For>
-            </main>
-        </dialog>
-    </section>;
+            }</For>
+        </main>
+    </Dropdown>
 }
