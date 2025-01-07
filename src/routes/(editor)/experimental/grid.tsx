@@ -74,8 +74,8 @@ export default function GridExperiment() {
             <fieldset>
                 <legend>Commands</legend>
 
-                <button onclick={() => api()?.insert({ id: crypto.randomUUID(), name: '', address: '', country: '', currency: '', email: '', phone: '' })}>add row</button>
-                <button onclick={() => api()?.remove(api()?.selection()?.map(i => i.key as any) ?? [])} disabled={api()?.selection().length === 0}>Remove {api()?.selection().length} items</button>
+                <button name="insert row" onclick={() => api()?.insert({ id: crypto.randomUUID(), name: '', address: '', country: '', currency: '', email: '', phone: '' })}>add row</button>
+                <button name="delete selected items" onclick={() => api()?.remove(api()?.selection()?.map(i => i.key as any) ?? [])} disabled={api()?.selection().length === 0}>Remove {api()?.selection().length} items</button>
             </fieldset>
 
             <fieldset>
