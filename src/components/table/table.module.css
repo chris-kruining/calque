@@ -29,7 +29,7 @@
         white-space: nowrap;
     }
 
-    & *:is(.cell:first-child, .checkbox + .cell) {
+    & :is(.cell:first-child, .checkbox + .cell) {
         position: sticky;
         inset-inline-start: 1px;
         padding-inline-start: calc(var(--depth, 0) * (1em + var(--padding-s)) + var(--padding-m));
@@ -211,11 +211,6 @@
 
         & :is(.cell:first-child, .checkbox + .cell) {
             inset-inline-start: 2em;
-        }
-
-        & details > summary {
-            inset-inline-start: 2em;
-            grid-column: 2;
         }
     }
 }

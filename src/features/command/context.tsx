@@ -106,7 +106,7 @@ const Add: Component<{ command: CommandType, commands: undefined } | { commands:
     return undefined;
 };
 
-const Context = <T extends (...args: any[]) => any = any>(props: ParentProps<{ for: CommandType<T>, with: Parameters<T> }>): JSX.Element => {
+const Context = <T extends (...args: any[]) => any = (...args: any[]) => any>(props: ParentProps<{ for: CommandType<T>, with: Parameters<T> }>): JSX.Element => {
     const resolved = children(() => props.children);
     const context = useCommands();
     const args = createMemo(() => props.with);

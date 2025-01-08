@@ -1,8 +1,8 @@
 import { Accessor, createContext, createMemo, createSignal, ParentComponent, Setter, useContext } from 'solid-js';
 import { translator, flatten, Translator, Flatten } from "@solid-primitives/i18n";
+import { makePersisted } from '@solid-primitives/storage';
 import en from '~/i18n/en-GB.json';
 import nl from '~/i18n/nl-NL.json';
-import { makePersisted } from '@solid-primitives/storage';
 
 type RawDictionary = typeof en;
 export type Dictionary = Flatten<RawDictionary>;

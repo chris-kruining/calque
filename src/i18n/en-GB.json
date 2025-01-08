@@ -28,7 +28,8 @@
                 "clearSelection": "Clear selection",
                 "insertKey": "Insert new key",
                 "insertLanguage": "Insert new language",
-                "delete": "Delete selected items"
+                "delete": "Delete selected items",
+                "copyKey": "Copy key"
             },
             "prompt": {
                 "newKey": {

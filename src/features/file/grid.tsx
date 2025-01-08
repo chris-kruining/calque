@@ -1,4 +1,4 @@
-import { Accessor, Component, createEffect, createMemo, createSignal } from "solid-js";
+import { Accessor, Component, createEffect, createMemo, createSignal, JSX } from "solid-js";
 import { debounce, decode, Mutation } from "~/utilities";
 import { Column, GridApi as GridCompApi, Grid as GridComp } from "~/components/grid";
 import { createDataSet, DataSetNode, DataSetRowNode } from "~/components/table";
@@ -29,7 +29,7 @@ const groupBy = (rows: DataSetRowNode<number, Entry>[]) => {
     return group(rows.map<R>(r => ({ ...r, _key: r.value.key }))) as any;
 }
 
-export function Grid(props: { class?: string, rows: Entry[], locales: string[], api?: (api: GridApi) => any }) {
+export function Grid(props: { class?: string, rows: Entry[], locales: string[], api?: (api: GridApi) => any, children?: (key: string) => JSX.Element }) {
     const { t } = useI18n();
 
     const rows = createMemo(() => createDataSet<Entry>(props.rows, { group: { by: 'key', with: groupBy } }));
@@ -38,7 +38,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
         {
             id: 'key',
             label: t('feature.file.grid.key'),
-            renderer: ({ value }) => value.split('.').at(-1),
+            renderer: ({ value }) => props.children?.(value) ?? value.split('.').at(-1),
         },
         ...locales().map<Column<Entry>>(lang => ({
             id: lang,

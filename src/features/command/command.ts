@@ -9,7 +9,7 @@ export enum Modifier {
 }
 
 export interface CommandType<T extends (...args: any[]) => any = (...args: any[]) => any> {
-    (...args: Parameters<T>): Promise<ReturnType<T>>;
+    (...args: Parameters<T>): (ReturnType<T> extends Promise<any> ? ReturnType<T> : Promise<ReturnType<T>>);
     label: DictionaryKey;
     shortcut?: {
         key: string;

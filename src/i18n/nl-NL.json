@@ -28,7 +28,8 @@
                 "clearSelection": "Selectie leeg maken",
                 "insertKey": "Voeg nieuwe sleutel toe",
                 "insertLanguage": "Voeg nieuwe taal toe",
-                "delete": "Verwijder geselecteerde items"
+                "delete": "Verwijder geselecteerde items",
+                "copyKey": "Kopieer sleutel"
             },
             "prompt": {
                 "newKey": {

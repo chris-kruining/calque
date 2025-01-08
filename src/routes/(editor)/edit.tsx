@@ -12,6 +12,7 @@ import { Prompt, PromptApi } from "~/components/prompt";
 import EditBlankImage from '~/assets/edit-blank.svg'
 import { useI18n } from "~/features/i18n";
 import { makePersisted } from "@solid-primitives/storage";
+import { writeClipboard } from "@solid-primitives/clipboard";
 import css from "./edit.module.css";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
@@ -449,7 +450,19 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<(G
         })();
     });
 
-    return <Grid rows={rows()} locales={locales()} api={setApi} />;
+    const copyKey = createCommand('page.edit.command.copyKey', (key: string) => writeClipboard(key));
+
+    return <Grid rows={rows()} locales={locales()} api={setApi}>{
+        key => {
+            return <Context.Root commands={[copyKey.with(key)]}>
+                <Context.Menu>{
+                    command => <Command.Handle command={command} />
+                }</Context.Menu>
+
+                <Context.Handle>{key.split('.').at(-1)!}</Context.Handle>
+            </Context.Root>;
+        }
+    }</Grid>;
 };
 
 const Blank: Component<{ open: CommandType }> = (props) => {

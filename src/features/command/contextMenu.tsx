@@ -1,27 +1,28 @@
 import { Accessor, Component, createContext, createEffect, createMemo, createSignal, For, JSX, ParentComponent, splitProps, useContext } from "solid-js";
 import { CommandType } from "./command";
 import css from "./contextMenu.module.css";
+import { useCommands } from "./context";
 
 interface ContextMenuType {
     readonly commands: Accessor<CommandType[]>;
-    readonly target: Accessor<HTMLElement | undefined>;
-    show(element: HTMLElement): void;
+    readonly event: Accessor<Event | undefined>;
+    show(event: Event): void;
     hide(): void;
 }
 
 const ContextMenu = createContext<ContextMenuType>()
 
 const Root: ParentComponent<{ commands: CommandType[] }> = (props) => {
-    const [target, setTarget] = createSignal<HTMLElement>();
+    const [event, setEvent] = createSignal<Event>();
 
-    const context = {
+    const context: ContextMenuType = {
         commands: createMemo(() => props.commands),
-        target,
-        show(element: HTMLElement) {
-            setTarget(element);
+        event,
+        show(event) {
+            setEvent(event);
         },
         hide() {
-            setTarget(undefined);
+            setEvent(undefined);
         },
     };
 
@@ -32,17 +33,18 @@ const Root: ParentComponent<{ commands: CommandType[] }> = (props) => {
 
 const Menu: Component<{ children: (command: CommandType) => JSX.Element }> = (props) => {
     const context = useContext(ContextMenu)!;
+    const commandContext = useCommands();
     const [root, setRoot] = createSignal<HTMLElement>();
 
     createEffect(() => {
-        const target = context.target();
+        const event = context.event();
         const menu = root();
 
         if (!menu) {
             return;
         }
 
-        if (target) {
+        if (event) {
             menu.showPopover();
         }
         else {
@@ -57,12 +59,11 @@ const Menu: Component<{ children: (command: CommandType) => JSX.Element }> = (pr
     };
 
     const onCommand = (command: CommandType) => (e: PointerEvent) => {
+        commandContext?.execute(command, context.event()!);
         context.hide();
-
-        command();
     };
 
-    return <menu ref={setRoot} class={css.menu} style={`position-anchor: ${context.target()?.style.getPropertyValue('anchor-name')};`} popover ontoggle={onToggle}>
+    return <menu ref={setRoot} class={css.menu} style={`position-anchor: ${context.event()?.target?.style.getPropertyValue('anchor-name')};`} popover ontoggle={onToggle}>
         <For each={context.commands()}>{
             command => <li onpointerdown={onCommand(command)}>{props.children(command)}</li>
         }</For>
@@ -73,12 +74,11 @@ const Handle: ParentComponent<Record<string, any>> = (props) => {
     const [local, rest] = splitProps(props, ['children']);
 
     const context = useContext(ContextMenu)!;
-    const [handle, setHandle] = createSignal<HTMLElement>();
 
-    return <span {...rest} ref={setHandle} style={`anchor-name: --context-menu-${createUniqueId()};`} oncontextmenu={(e) => {
+    return <span {...rest} style={`anchor-name: --context-menu-${createUniqueId()};`} oncontextmenu={(e) => {
         e.preventDefault();
 
-        context.show(handle()!);
+        context.show(e);
 
         return false;
     }}>{local.children}</span>;
