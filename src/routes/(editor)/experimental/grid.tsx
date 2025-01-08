@@ -2,8 +2,9 @@ import { Sidebar } from '~/components/sidebar';
 import { CellEditor, Column, DataSetGroupNode, DataSetNode, DataSetRowNode, Grid, GridApi } from '~/components/grid';
 import { people, Person } from './experimental.data';
 import { Component, createEffect, createMemo, createSignal, For, Match, Switch } from 'solid-js';
-import { debounce, MutarionKind, Mutation } from '~/utilities';
+import { MutarionKind, Mutation } from '~/utilities';
 import { createDataSet, Table } from '~/components/table';
+import { debounce } from '@solid-primitives/scheduled';
 import css from './grid.module.css';
 
 export default function GridExperiment() {

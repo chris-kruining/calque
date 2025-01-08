@@ -1,9 +1,10 @@
 import { Accessor, Component, createEffect, createMemo, createSignal, JSX } from "solid-js";
-import { debounce, decode, Mutation } from "~/utilities";
+import { decode, Mutation } from "~/utilities";
 import { Column, GridApi as GridCompApi, Grid as GridComp } from "~/components/grid";
 import { createDataSet, DataSetNode, DataSetRowNode } from "~/components/table";
 import { SelectionItem } from "../selectable";
 import { useI18n } from "../i18n";
+import { debounce } from "@solid-primitives/scheduled";
 import css from "./grid.module.css"
 
 export type Entry = { key: string } & { [lang: string]: string };

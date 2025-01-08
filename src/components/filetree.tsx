@@ -1,8 +1,8 @@
 import { Accessor, Component, createContext, createSignal, For, JSX, Show, useContext } from "solid-js";
 import { AiFillFile, AiFillFolder, AiFillFolderOpen } from "solid-icons/ai";
 import { SelectionProvider, selectable } from "~/features/selectable";
+import { debounce } from "@solid-primitives/scheduled";
 import css from "./filetree.module.css";
-import { debounce } from "~/utilities";
 
 selectable;
 

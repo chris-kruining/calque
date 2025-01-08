@@ -23,18 +23,6 @@ const decodeReplacer = (_: any, char: string) => ({
 }[char.charAt(0)] ?? '');
 export const decode = (subject: string): string => subject.replace(decodeRegex, decodeReplacer);
 
-export const debounce = <T extends (...args: any[]) => void>(callback: T, delay: number): ((...args: Parameters<T>) => void) => {
-    let handle: ReturnType<typeof setTimeout> | undefined;
-
-    return (...args: Parameters<T>) => {
-        if (handle) {
-            clearTimeout(handle);
-        }
-
-        handle = setTimeout(() => callback(...args), delay);
-    };
-};
-
 export const deepCopy = <T>(original: T): T => {
     if (typeof original !== 'object' || original === null || original === undefined) {
         return original;

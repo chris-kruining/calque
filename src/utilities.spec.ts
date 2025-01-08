@@ -72,40 +72,6 @@ describe('utilities', () => {
         });
     });
 
-    describe('debounce', () => {
-        const { tick } = useFakeTimers();
-
-        it('should run the given callback after the provided time', async () => {
-            // Arrange
-            const callback = mock(() => { });
-            const delay = 1000;
-            const debounced = debounce(callback, delay);
-
-            // Act
-            debounced();
-            tick(delay);
-
-            // Assert
-            expect(callback).toHaveBeenCalledTimes(1);
-        });
-
-        it('should reset if another call is made', async () => {
-            // Arrange
-            const callback = mock(() => { });
-            const delay = 1000;
-            const debounced = debounce(callback, delay);
-
-            // Act
-            debounced();
-            tick(delay / 2);
-            debounced();
-            tick(delay);
-
-            // Assert
-            expect(callback).toHaveBeenCalledTimes(1);
-        });
-    });
-
     describe('deepCopy', () => {
         it('can skip values passed by reference (non-objects, null, and undefined)', async () => {
             // arrange
