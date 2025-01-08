@@ -1,7 +1,8 @@
-import { Accessor, children, Component, createContext, createEffect, createMemo, For, JSX, ParentComponent, ParentProps, Show, useContext } from 'solid-js';
+import { Accessor, children, Component, createContext, createEffect, createMemo, For, JSX, Match, ParentComponent, ParentProps, Show, Switch, useContext } from 'solid-js';
 import { useI18n } from '../i18n';
 import { createStore } from 'solid-js/store';
 import { CommandType, Modifier } from './command';
+import { BsCommand, BsOption, BsShift, BsWindows } from 'solid-icons/bs';
 
 interface CommandContextType {
     readonly commands: Accessor<CommandType[]>;
@@ -127,24 +128,46 @@ const Context = <T extends (...args: any[]) => any = (...args: any[]) => any>(pr
 const Handle: Component<{ command: CommandType }> = (props) => {
     const { t } = useI18n();
 
+    const isMac = false;
+    const isWindows = false;
+
     return <>
         {String(t(props.command.label) ?? props.command.label)}
 
         <Show when={props.command.shortcut}>{
             shortcut => {
                 const modifier = shortcut().modifier;
-                const modifierMap: Record<number, string> = {
-                    [Modifier.Shift]: 'Shft',
-                    [Modifier.Control]: 'Ctrl',
-                    [Modifier.Meta]: 'Meta',
-                    [Modifier.Alt]: 'Alt',
+
+                const title: Record<number, string> = {
+                    [Modifier.Shift]: 'shift',
+                    [Modifier.Control]: 'control',
+                    [Modifier.Meta]: 'meta',
+                    [Modifier.Alt]: 'alt',
                 };
 
                 return <samp>
                     <For each={Object.values(Modifier).filter((m): m is number => typeof m === 'number').filter(m => modifier & m)}>{
-                        (m) => <><kbd>{modifierMap[m]}</kbd>+</>
+                        (m) => <><kbd title={title[m]}>
+                            <Switch>
+                                <Match when={m === Modifier.Shift}>
+                                    <BsShift />
+                                </Match>
+
+                                <Match when={m === Modifier.Control}>
+                                    <Show when={isMac} fallback="Ctrl"><BsCommand /></Show>
+                                </Match>
+
+                                <Match when={m === Modifier.Meta}>
+                                    <Show when={isWindows} fallback="Meta"><BsWindows /></Show>
+                                </Match>
+
+                                <Match when={m === Modifier.Alt}>
+                                    <Show when={isMac} fallback="Alt"><BsOption /></Show>
+                                </Match>
+                            </Switch>
+                        </kbd>+</>
                     }</For>
-                    <kbd>{shortcut().key}</kbd>
+                    <kbd>{shortcut().key.toUpperCase()}</kbd>
                 </samp>;
             }
         }</Show>

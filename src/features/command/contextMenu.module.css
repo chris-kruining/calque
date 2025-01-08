@@ -5,11 +5,11 @@
     place-content: start;
 
     inset-inline-start: anchor(start);
-    inset-block-start: anchor(end);
+    inset-block-start: anchor(start);
 
     margin: 0;
     gap: var(--padding-m);
-    padding: var(--padding-m) 0;
+    padding: var(--padding-m);
     font-size: var(--text-s);
 
     background-color: var(--surface-700);
@@ -24,6 +24,7 @@
         align-items: center;
 
         padding: var(--padding-s) var(--padding-m);
+        border-radius: var(--radii-m);
 
         & > sub {
             color: var(--text-2);

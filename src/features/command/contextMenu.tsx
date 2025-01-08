@@ -35,6 +35,7 @@ const Menu: Component<{ children: (command: CommandType) => JSX.Element }> = (pr
     const context = useContext(ContextMenu)!;
     const commandContext = useCommands();
     const [root, setRoot] = createSignal<HTMLElement>();
+    const [pos, setPos] = createSignal([0, 0]);
 
     createEffect(() => {
         const event = context.event();
@@ -52,6 +53,12 @@ const Menu: Component<{ children: (command: CommandType) => JSX.Element }> = (pr
         }
     });
 
+    createEffect(() => {
+        const { offsetX = 0, offsetY = 0 } = (context.event() ?? {}) as MouseEvent;
+
+        setPos([offsetX, offsetY]);
+    });
+
     const onToggle = (e: ToggleEvent) => {
         if (e.newState === 'closed') {
             context.hide();
@@ -63,7 +70,7 @@ const Menu: Component<{ children: (command: CommandType) => JSX.Element }> = (pr
         context.hide();
     };
 
-    return <menu ref={setRoot} class={css.menu} style={`position-anchor: ${context.event()?.target?.style.getPropertyValue('anchor-name')};`} popover ontoggle={onToggle}>
+    return <menu ref={setRoot} class={css.menu} anchor={context.event()?.target?.id} style={`translate: ${pos()[0]}px ${pos()[1]}px;`} popover ontoggle={onToggle}>
         <For each={context.commands()}>{
             command => <li onpointerdown={onCommand(command)}>{props.children(command)}</li>
         }</For>
@@ -75,7 +82,7 @@ const Handle: ParentComponent<Record<string, any>> = (props) => {
 
     const context = useContext(ContextMenu)!;
 
-    return <span {...rest} style={`anchor-name: --context-menu-${createUniqueId()};`} oncontextmenu={(e) => {
+    return <span {...rest} id={`context-menu-handle-${createUniqueId()};`} oncontextmenu={(e) => {
         e.preventDefault();
 
         context.show(e);
@@ -85,6 +92,6 @@ const Handle: ParentComponent<Record<string, any>> = (props) => {
 };
 
 let handleCounter = 0;
-const createUniqueId = () => `handle-${handleCounter++}`
+const createUniqueId = () => `${handleCounter++}`;
 
 export const Context = { Root, Menu, Handle };

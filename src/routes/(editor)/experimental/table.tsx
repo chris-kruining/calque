@@ -3,7 +3,6 @@ import { Column, createDataSet, DataSetGroupNode, DataSetNode, DataSetRowNode, G
 import { createStore } from 'solid-js/store';
 import { Person, people } from './experimental.data';
 import { createEffect, createMemo, For } from 'solid-js';
-import { Command, createCommand, Modifier } from '~/features/command';
 import css from './table.module.css';
 
 export default function TableExperiment() {
