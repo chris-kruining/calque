@@ -66,11 +66,9 @@ export default function Edit(props: ParentProps) {
         filesContext.open(directory);
     }, { key: 'o', modifier: Modifier.Control });
 
-    return <Context.Root commands={[open]}>
-        <Show when={filesContext.root()} fallback={<Blank open={open} />}>{
-            root => <Editor root={root()} />
-        }</Show>
-    </Context.Root>;
+    return <Show when={filesContext.root()} fallback={<Blank open={open} />}>{
+        root => <Editor root={root()} />
+    }</Show>;
 }
 
 const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
@@ -316,10 +314,6 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     return <div class={css.root}>
         <Command.Add commands={[commands.saveAs, commands.closeTab]} />
 
-        <Context.Menu>{
-            command => <Command.Handle command={command} />
-        }</Context.Menu>
-
         <Menu.Root>
             <Menu.Item label={t('page.edit.menu.file')}>
                 <Menu.Item command={commands.open} />
@@ -366,11 +360,11 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
                 file => {
                     const mutated = createMemo(() => mutatedFiles().values().find(({ id }) => id === file().id) !== undefined);
 
-                    return <Context.Handle class={`${mutated() ? css.mutated : ''}`} onDblClick={() => {
+                    return <span class={`${mutated() ? css.mutated : ''}`} onDblClick={() => {
                         const folder = file().directory;
                         filesContext?.set(folder.name, folder);
                         setActive(folder.name);
-                    }}>{file().name}</Context.Handle>;
+                    }}>{file().name}</span>;
                 },
             ] as const}</Tree>
         </Sidebar>
