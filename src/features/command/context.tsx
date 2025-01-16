@@ -75,6 +75,10 @@ const Root: ParentComponent<{ commands: CommandType[] }> = (props) => {
     });
 
     const listener = (e: KeyboardEvent) => {
+        if (!e.key) {
+            return;
+        }
+
         const key = e.key.toLowerCase();
         const modifiers =
             (e.shiftKey ? 1 : 0) << 0 |

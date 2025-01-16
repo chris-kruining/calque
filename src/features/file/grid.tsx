@@ -47,7 +47,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             renderer: ({ row, column, value, mutate }) => {
                 const entry = rows().value[row]!;
 
-                return <TextArea row={row} key={entry.key} lang={String(column)} value={value} oninput={e => mutate(e.data ?? '')} />;
+                return <TextArea row={row} key={entry.key} lang={String(column)} value={value ?? ''} oninput={e => mutate(e.data ?? '')} />;
             },
         }))
     ]);
@@ -58,9 +58,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
         const r = rows();
         const l = locales();
 
-        r.mutateEach(({ key, ...rest }) => {
-            return ({ key, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) });
-        });
+        r.mutateEach(({ key, ...rest }) => ({ key, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
     });
 
     createEffect(() => {
