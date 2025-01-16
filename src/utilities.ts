@@ -19,7 +19,7 @@ const decodeReplacer = (_: any, char: string) => ({
     f: '\f',
     "'": '\'',
     '"': '\"',
-    u: String.fromCharCode(Number.parseInt(char.slice(1))),
+    u: String.fromCharCode(Number.parseInt(`0x${char.slice(1)}`)),
 }[char.charAt(0)] ?? '');
 export const decode = (subject: string): string => subject.replace(decodeRegex, decodeReplacer);
 

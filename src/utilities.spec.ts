@@ -1,5 +1,5 @@
-import { describe, beforeEach, it, expect, mock, afterAll, spyOn } from 'bun:test';
-import { debounce, deepCopy, deepDiff, filter, map, MutarionKind, splitAt } from './utilities';
+import { describe, beforeEach, it, expect, afterAll, spyOn } from 'bun:test';
+import { decode, deepCopy, deepDiff, filter, map, MutarionKind, splitAt } from './utilities';
 import { install } from '@sinonjs/fake-timers';
 
 type MilliSeconds = number;
@@ -69,6 +69,44 @@ describe('utilities', () => {
             // Assert
             expect(a).toBe(expected[0]);
             expect(b).toBe(expected[1]);
+        });
+    });
+
+    describe('decode', () => {
+        it('should decode \\t characters', async () => {
+            // Arrange
+            const given = 'this is\\ta string';
+            const expected = 'this is\ta string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('should decode \\n characters', async () => {
+            // Arrange
+            const given = 'this is\\na string';
+            const expected = 'this is\na string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('should decode \\uHHHH characters', async () => {
+            // Arrange
+            const given = 'this is \\u1234 a string';
+            const expected = 'this is \u1234 a string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
         });
     });
 
