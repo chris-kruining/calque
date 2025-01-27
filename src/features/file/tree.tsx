@@ -161,10 +161,6 @@ const readTree = (directory: Accessor<FileSystemDirectoryHandle>): Accessor<Fold
         clearInterval(interval);
     });
 
-    createEffect(() => {
-        console.log(entries.latest);
-    });
-
     return createMemo<FolderEntry>(() => ({ name: directory().name, id: '', kind: 'folder', handle: directory(), entries: entries.latest }));
 };
 
