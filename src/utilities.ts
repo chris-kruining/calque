@@ -68,13 +68,13 @@ export function* deepDiff<T1 extends object, T2 extends object>(a: T1, b: T2, pa
     }
 
     for (const [[keyA, valueA], [keyB, valueB]] of zip(entriesOf(a), entriesOf(b))) {
-        if (keyA === undefined && keyB) {
+        if (keyA === undefined && keyB !== undefined) {
             yield { key: path.concat(keyB.toString()).join('.'), kind: MutarionKind.Create, value: valueB };
 
             continue;
         }
 
-        if (keyA && keyB === undefined) {
+        if (keyA !== undefined && keyB === undefined) {
             yield { key: path.concat(keyA.toString()).join('.'), kind: MutarionKind.Delete, original: valueA };
 
             continue;
