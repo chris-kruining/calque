@@ -13,6 +13,7 @@ export interface GridApi {
     readonly selection: Accessor<SelectionItem<number, Entry>[]>;
     remove(indices: number[]): void;
     addKey(key: string): void;
+    addLocale(locale: string): void;
     selectAll(): void;
     clearSelection(): void;
 };
@@ -33,8 +34,9 @@ const groupBy = (rows: DataSetRowNode<number, Entry>[]) => {
 export function Grid(props: { class?: string, rows: Entry[], locales: string[], api?: (api: GridApi) => any, children?: (key: string) => JSX.Element }) {
     const { t } = useI18n();
 
+    const [addedLocales, setAddedLocales] = createSignal<string[]>([]);
     const rows = createMemo(() => createDataSet<Entry>(props.rows, { group: { by: 'key', with: groupBy } }));
-    const locales = createMemo(() => props.locales);
+    const locales = createMemo(() => [...props.locales, ...addedLocales()]);
     const columns = createMemo<Column<Entry>[]>(() => [
         {
             id: 'key',
@@ -56,9 +58,9 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
 
     createEffect(() => {
         const r = rows();
-        const l = locales();
+        const l = addedLocales();
 
-        r.mutateEach(({ key, ...rest }) => ({ key, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
+        r.mutateEach(({ key, ...rest }) => ({ key, ...rest, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
     });
 
     createEffect(() => {
@@ -70,6 +72,9 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             remove: r.remove,
             addKey(key) {
                 r.insert({ key, ...Object.fromEntries(locales().map(l => [l, ''])) });
+            },
+            addLocale(locale) {
+                setAddedLocales(locales => new Set([...locales, locale]).values().toArray())
             },
             selectAll() {
                 api()?.selectAll();

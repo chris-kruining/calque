@@ -232,7 +232,6 @@ function Row<K extends number | string, T extends Record<string, any>>(props: { 
             ({ id }) => {
                 const content = table.cellRenderers()[id]?.({ row: props.key as number, column: id, value: props.value[id] }) ?? props.value[id];
 
-                // return <>{content}</>;
                 return <td class={css.cell}>{content}</td>;
             }
         }</For>

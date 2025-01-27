@@ -5,6 +5,7 @@
       "name": "calque",
       "dependencies": {
         "@solid-primitives/clipboard": "^1.5.10",
+        "@solid-primitives/destructure": "^0.2.0",
         "@solid-primitives/i18n": "^2.1.1",
         "@solid-primitives/scheduled": "^1.4.4",
         "@solid-primitives/storage": "^4.2.1",
@@ -414,6 +415,8 @@
     "@sinonjs/fake-timers": ["@sinonjs/fake-timers@14.0.0", "", { "dependencies": { "@sinonjs/commons": "^3.0.1" } }, "sha512-QfoXRaUTjMVVn/ZbnD4LS3TPtqOkOdKIYCKldIVPnuClcwRKat6LI2mRZ2s5qiBfO6Fy03An35dSls/2/FEc0Q=="],
 
     "@solid-primitives/clipboard": ["@solid-primitives/clipboard@1.5.10", "", { "dependencies": { "@solid-primitives/utils": "^6.2.3" }, "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-ohwlrBP4j+Qjksg01CFWaP/USpzX78dBNVA1DPRZkf/vJgytX0T6KMc2YxF6o8fs6ePIYSI8Nt3sKxF0sh1q+Q=="],
+
+    "@solid-primitives/destructure": ["@solid-primitives/destructure@0.2.0", "", { "dependencies": { "@solid-primitives/utils": "^6.3.0" }, "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-nfE6nSkyLle+hIQzvxGwzyt3TvFwgBjhFiQ7y2Cq+amBiwpvVVm+1qncE8tKaKk6JNn/CilgXZgJ/KMb/p3csA=="],
 
     "@solid-primitives/i18n": ["@solid-primitives/i18n@2.1.1", "", { "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-1p9B8hveu+gzFRWfXcRtdzzEdr7gw3c8uLXm+2bU33JHgiI8kYJsWvG128sE6vU1ZtYGPrGq980Jd6hxYupyZQ=="],
 
@@ -1600,6 +1603,8 @@
     "@rollup/plugin-replace/rollup": ["rollup@2.79.2", "", { "optionalDependencies": { "fsevents": "~2.3.2" }, "bin": { "rollup": "dist/bin/rollup" } }, "sha512-fS6iqSPZDs3dr/y7Od6y5nha8dW1YnbgtsyotCVvoFGKbERG++CVRFv1meyGDE1SNItQA8BrnCw7ScdAhRJ3XQ=="],
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
+
+    "@solid-primitives/destructure/@solid-primitives/utils": ["@solid-primitives/utils@6.3.0", "", { "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-e7hTlJ1Ywh2+g/Qug+n4L1mpfxsikoIS4/sHE2EK9WatQt8UJqop/vE6bsLnXlU1xuhb/jo94Ah5Y27rd4wP7A=="],
 
     "@surma/rollup-plugin-off-main-thread/magic-string": ["magic-string@0.25.9", "", { "dependencies": { "sourcemap-codec": "^1.4.8" } }, "sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ=="],
 

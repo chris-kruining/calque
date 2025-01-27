@@ -2,6 +2,7 @@
   "name": "calque",
   "dependencies": {
     "@solid-primitives/clipboard": "^1.5.10",
+    "@solid-primitives/destructure": "^0.2.0",
     "@solid-primitives/i18n": "^2.1.1",
     "@solid-primitives/scheduled": "^1.4.4",
     "@solid-primitives/storage": "^4.2.1",

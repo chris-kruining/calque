@@ -1,8 +1,7 @@
 import Dexie, { EntityTable } from "dexie";
-import { Accessor, createContext, createMemo, onMount, ParentComponent, useContext } from "solid-js";
+import { Accessor, createContext, createMemo, createResource, InitializedResource, onCleanup, onMount, ParentComponent, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { isServer } from "solid-js/web";
-import { json } from "./parser";
 
 const ROOT = '__root__';
 
@@ -164,11 +163,3 @@ export const FilesProvider: ParentComponent = (props) => {
 }
 
 export const useFiles = () => useContext(FilesContext)!;
-
-export const load = (file: File): Promise<Map<string, string> | undefined> => {
-    switch (file.type) {
-        case 'application/json': return json.load(file.stream())
-
-        default: return Promise.resolve(undefined);
-    }
-};

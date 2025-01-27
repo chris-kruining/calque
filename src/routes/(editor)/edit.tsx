@@ -1,9 +1,8 @@
-import { Component, createEffect, createMemo, createSignal, For, onMount, ParentProps, Setter, Show } from "solid-js";
+import { Component, createEffect, createMemo, createResource, createSignal, For, onMount, ParentProps, Setter, Show } from "solid-js";
 import { Created, filter, MutarionKind, Mutation, splitAt } from "~/utilities";
 import { Sidebar } from "~/components/sidebar";
-import { emptyFolder, FolderEntry, walk as fileTreeWalk, Tree } from "~/components/filetree";
 import { Menu } from "~/features/menu";
-import { Grid, load, useFiles } from "~/features/file";
+import { Grid, load, readFiles, TreeProvider, Tree, useFiles } from "~/features/file";
 import { Command, CommandType, Context, createCommand, Modifier } from "~/features/command";
 import { Entry, GridApi } from "~/features/file/grid";
 import { Tab, Tabs } from "~/components/tabs";
@@ -13,6 +12,7 @@ import EditBlankImage from '~/assets/edit-blank.svg'
 import { useI18n } from "~/features/i18n";
 import { makePersisted } from "@solid-primitives/storage";
 import { writeClipboard } from "@solid-primitives/clipboard";
+import { destructure } from "@solid-primitives/destructure";
 import css from "./edit.module.css";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
@@ -93,7 +93,6 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     }));
     const [active, setActive] = makePersisted(createSignal<string>(), { name: 'edit__aciveTab' });
     const [contents, setContents] = createSignal<Map<string, Map<string, string>>>(new Map());
-    const [tree, setFiles] = createSignal<FolderEntry>(emptyFolder);
     const [newKeyPrompt, setNewKeyPrompt] = createSignal<PromptApi>();
     const [newLanguagePrompt, setNewLanguagePrompt] = createSignal<PromptApi>();
 
@@ -232,7 +231,6 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
         (async () => {
             setContents(new Map(await Array.fromAsync(walk(directory), ({ id, entries }) => [id, entries] as const)))
-            setFiles({ name: directory.name, id: '', kind: 'folder', handle: directory, entries: await Array.fromAsync(fileTreeWalk(directory)) });
         })();
     });
 
@@ -350,24 +348,26 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
             <input name="locale" placeholder={t('page.edit.prompt.newLanguage.placeholder')} />
         </Prompt>
 
-        <Sidebar as="aside" label={tree().name} class={css.sidebar}>
-            <Tree entries={tree().entries}>{[
-                folder => {
-                    return <span onDblClick={() => {
-                        filesContext?.set(folder().name, folder().handle);
-                    }}>{folder().name}</span>;
-                },
-                file => {
-                    const mutated = createMemo(() => mutatedFiles().values().find(({ id }) => id === file().id) !== undefined);
+        <TreeProvider directory={props.root}>
+            <Sidebar as="aside" label={props.root.name} class={css.sidebar}>
+                <Tree>{[
+                    folder => {
+                        return <span onDblClick={() => {
+                            filesContext?.set(folder().name, folder().handle);
+                        }}>{folder().name}</span>;
+                    },
+                    file => {
+                        const mutated = createMemo(() => mutatedFiles().values().find(({ id }) => id === file().id) !== undefined);
 
-                    return <span class={`${mutated() ? css.mutated : ''}`} onDblClick={() => {
-                        const folder = file().directory;
-                        filesContext?.set(folder.name, folder);
-                        setActive(folder.name);
-                    }}>{file().name}</span>;
-                },
-            ] as const}</Tree>
-        </Sidebar>
+                        return <span class={`${mutated() ? css.mutated : ''}`} onDblClick={() => {
+                            const folder = file().directory;
+                            filesContext?.set(folder.name, folder);
+                            setActive(folder.name);
+                        }}>{file().name}</span>;
+                    },
+                ] as const}</Tree>
+            </Sidebar>
+        </TreeProvider>
 
         <Tabs class={css.content} active={active()} setActive={setActive} onClose={commands.closeTab}>
             <For each={tabs()}>{
@@ -379,11 +379,38 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     </div>;
 };
 
-const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<(GridApi & { addLocale(locale: string): void }) | undefined>, entries?: Setter<Entries> }> = (props) => {
-    const [entries, setEntries] = createSignal<Entries>(new Map());
+const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<GridApi | undefined>, entries?: Setter<Entries> }> = (props) => {
     const [locales, setLocales] = createSignal<string[]>([]);
-    const [rows, setRows] = createSignal<Entry[]>([]);
     const [api, setApi] = createSignal<GridApi>();
+
+    const files = readFiles(() => props.directory);
+    const [contents] = createResource(() => files.latest, (files) => Promise.all(Object.entries(files).map(async ([id, { file, handle }]) => ({ id, handle, lang: file.name.split('.').at(0)!, entries: (await load(file))! }))), { initialValue: [] });
+
+    const [entries, rows] = destructure(() => {
+        const template = contents.latest.map(({ lang, handle }) => [lang, { handle, value: '' }]);
+        const merged = contents.latest.reduce((aggregate, { id, handle, lang, entries }) => {
+            for (const [key, value] of entries.entries()) {
+                if (!aggregate.has(key)) {
+                    aggregate.set(key, Object.fromEntries(template));
+                }
+
+                aggregate.get(key)![lang] = { value, handle, id };
+            }
+
+            return aggregate;
+        }, new Map<string, Record<string, { id: string, value: string, handle: FileSystemFileHandle }>>());
+
+        const rows = merged.entries().map(([key, langs]) => ({ key, ...Object.fromEntries(Object.entries(langs).map(([lang, { value }]) => [lang, value])) } as Entry)).toArray();
+
+        return [
+            new Map(merged.entries().map(([key, langs], i) => [i.toString(), { key, ...langs }])) as Entries,
+            rows
+        ] as const;
+    });
+
+    createEffect(() => {
+        setLocales(contents.latest.map(({ lang }) => lang));
+    });
 
     createEffect(() => {
         props.entries?.(entries());
@@ -396,52 +423,7 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<(G
             return;
         }
 
-        props.api?.({
-            ...a,
-            addLocale(locale) {
-                setLocales(current => new Set([...current, locale]).values().toArray());
-            },
-        });
-    });
-
-    createEffect(() => {
-        const directory = props.directory;
-
-        if (!directory) {
-            return;
-        }
-
-        (async () => {
-            const contents = await Array.fromAsync(
-                filter(directory.values(), (handle): handle is FileSystemFileHandle => handle.kind === 'file' && handle.name.endsWith('.json')),
-                async handle => {
-                    const id = await handle.getUniqueId();
-                    const file = await handle.getFile();
-                    const lang = file.name.split('.').at(0)!;
-                    const entries = (await load(file))!;
-
-                    return { id, handle, lang, entries };
-                }
-            );
-            const template = contents.map(({ lang, handle }) => [lang, { handle, value: '' }]);
-
-            setLocales(contents.map(({ lang }) => lang));
-
-            const merged = contents.reduce((aggregate, { id, handle, lang, entries }) => {
-                for (const [key, value] of entries.entries()) {
-                    if (!aggregate.has(key)) {
-                        aggregate.set(key, Object.fromEntries(template));
-                    }
-
-                    aggregate.get(key)![lang] = { value, handle, id };
-                }
-
-                return aggregate;
-            }, new Map<string, Record<string, { id: string, value: string, handle: FileSystemFileHandle }>>());
-
-            setEntries(new Map(merged.entries().map(([key, langs], i) => [i.toString(), { key, ...langs }])) as Entries);
-            setRows(merged.entries().map(([key, langs]) => ({ key, ...Object.fromEntries(Object.entries(langs).map(([lang, { value }]) => [lang, value])) } as Entry)).toArray());
-        })();
+        props.api?.(a);
     });
 
     const copyKey = createCommand('page.edit.command.copyKey', (key: string) => writeClipboard(key));
