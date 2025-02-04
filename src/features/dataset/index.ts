@@ -164,11 +164,6 @@ export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>
 
         setState('value', nextValue);
         setState('snapshot', next);
-        ;
-    });
-
-    createEffect(() => {
-        console.log('dataset', mutations());
     });
 
     const set: DataSet<T> = {

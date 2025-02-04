@@ -107,21 +107,22 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
 
         return mutations.flatMap((m): any => {
             const [index, lang] = splitAt(m.key, m.key.indexOf('.'));
+            const file = files.get(lang);
 
             switch (m.kind) {
                 case MutarionKind.Update: {
                     const entry = entries.get(index as any)!;
-                    return { kind: MutarionKind.Update, key: entry.key, lang, file: files.get(lang)!, value: m.value };
+                    return { kind: MutarionKind.Update, key: entry.key, lang, file, value: m.value };
                 }
 
                 case MutarionKind.Create: {
                     if (typeof m.value === 'object') {
                         const { key, ...locales } = m.value;
-                        return Object.entries(locales).map(([lang, value]) => ({ kind: MutarionKind.Create, key, lang, file: files.get(lang)!, value }));
+                        return Object.entries(locales).map(([lang, value]) => ({ kind: MutarionKind.Create, key, lang, file, value }));
                     }
 
                     const entry = entries.get(index as any)!;
-                    return { kind: MutarionKind.Create, key: entry.key, lang, file: files.get(lang), value: m.value };
+                    return { kind: MutarionKind.Create, key: entry.key, lang, file, value: m.value };
                 }
 
                 case MutarionKind.Delete: {
@@ -146,8 +147,6 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
         }
 
         const groupedByFileId = Object.groupBy(muts, m => m.file?.id ?? 'undefined');
-
-        console.log(files, muts, groupedByFileId);
         const newFiles = Object.entries(Object.groupBy((groupedByFileId['undefined'] ?? []) as (Created & { lang: string, file: undefined })[], m => m.lang)).map(([lang, mutations]) => {
             const data = mutations!.reduce((aggregate, { key, value }) => {
                 let obj = aggregate;
