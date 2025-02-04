@@ -3,7 +3,8 @@ import { CellEditor, Column, DataSetGroupNode, DataSetNode, DataSetRowNode, Grid
 import { people, Person } from './experimental.data';
 import { Component, createEffect, createMemo, createSignal, For, Match, Switch } from 'solid-js';
 import { MutarionKind, Mutation } from '~/utilities';
-import { createDataSet, Table } from '~/components/table';
+import { Table } from '~/components/table';
+import { createDataSet } from '~/features/dataset';
 import { debounce } from '@solid-primitives/scheduled';
 import css from './grid.module.css';
 
@@ -65,7 +66,7 @@ export default function GridExperiment() {
 
     const mutations = createMemo(() => api()?.mutations() ?? [])
 
-    const rows = createDataSet(people.slice(0, 20), {
+    const rows = createDataSet(() => people.slice(0, 20), {
         // group: { by: 'country' },
         sort: { by: 'name', reversed: false },
     });

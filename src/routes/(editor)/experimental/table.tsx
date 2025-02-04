@@ -1,5 +1,6 @@
 import { Sidebar } from '~/components/sidebar';
-import { Column, createDataSet, DataSetGroupNode, DataSetNode, DataSetRowNode, GroupOptions, SelectionMode, SortOptions, Table } from '~/components/table';
+import { Column, SelectionMode, Table } from '~/components/table';
+import { createDataSet, DataSetGroupNode, DataSetNode, DataSetRowNode, GroupOptions, SortOptions } from '~/features/dataset';
 import { createStore } from 'solid-js/store';
 import { Person, people } from './experimental.data';
 import { createEffect, createMemo, For } from 'solid-js';
@@ -57,7 +58,7 @@ export default function TableExperiment() {
         sorting: { by: 'country', reversed: false },
     });
 
-    const rows = createMemo(() => createDataSet(people, {
+    const rows = createMemo(() => createDataSet(() => people, {
         group: { by: 'country' },
         sort: { by: 'country', reversed: false },
     }));
