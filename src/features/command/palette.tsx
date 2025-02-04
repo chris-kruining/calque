@@ -56,10 +56,16 @@ export const CommandPalette: Component<{ api?: (api: CommandPaletteApi) => any, 
 
     return <dialog ref={setRoot} class={css.commandPalette} onClose={() => setOpen(false)}>
         <SearchableList title="command palette" items={context.commands()} keySelector={item => t(item.label) as string} context={setSearch} onSubmit={onSubmit}>{
-            (item, ctx) => <For each={(t(item.label) as string).split(new RegExp(ctx.filter(), 'i'))}>{(part, index) => <>
-                <Show when={index() !== 0}><b>{ctx.filter()}</b></Show>
-                {part}
-            </>}</For>
+            (item, ctx) => {
+                const label = t(item.label) as string;
+                const filter = ctx.filter().toLowerCase();
+                const length = filter.length;
+                const indices = [0, ...Array.from(label.matchAll(new RegExp(filter, 'gi')).flatMap(({ index }) => [index, index + length]))];
+
+                return <For each={indices.map((current, i) => label.slice(current, indices[i + 1]))}>{
+                    (part) => <Show when={part.toLowerCase() === filter} fallback={part}><b>{part}</b></Show>
+                }</For>;
+            }
         }</SearchableList>
     </dialog>;
 };
