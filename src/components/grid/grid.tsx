@@ -1,6 +1,7 @@
 import { Accessor, createContext, createEffect, createMemo, createSignal, JSX, useContext } from "solid-js";
 import { Mutation } from "~/utilities";
-import { SelectionMode, Table, Column as TableColumn, TableApi, DataSet, CellRenderer as TableCellRenderer } from "~/components/table";
+import { SelectionMode, Table, Column as TableColumn, TableApi, CellRenderer as TableCellRenderer } from "~/components/table";
+import { DataSet } from "~/features/dataset";
 import css from './grid.module.css';
 
 export interface CellRenderer<T extends Record<string, any>, K extends keyof T> {

@@ -1,8 +1,7 @@
-import { Accessor, createEffect, createMemo } from "solid-js";
-import { createStore, NotWrappable, produce, StoreSetter, unwrap } from "solid-js/store";
+import { Accessor, createEffect, createMemo, untrack } from "solid-js";
+import { createStore, produce } from "solid-js/store";
 import { CustomPartial } from "solid-js/store/types/store.js";
-import { deepCopy, deepDiff, Mutation } from "~/utilities";
-
+import { deepCopy, deepDiff, MutarionKind, Mutation } from "~/utilities";
 
 export type DataSetRowNode<K, T> = { kind: 'row', key: K, value: T }
 export type DataSetGroupNode<K, T> = { kind: 'group', key: K, groupedBy: keyof T, nodes: DataSetNode<K, T>[] };
@@ -37,7 +36,6 @@ export type Setter<T> =
     | ((prevState: T) => T | CustomPartial<T>);
 
 export interface DataSet<T extends Record<string, any>> {
-    data: T[];
     nodes: Accessor<DataSetNode<keyof T, T>[]>;
     mutations: Accessor<Mutation[]>;
     readonly value: (T | undefined)[];
@@ -59,10 +57,10 @@ function defaultGroupingFunction<T>(groupBy: keyof T): GroupingFunction<number, 
         .map(([key, nodes]) => ({ kind: 'group', key, groupedBy: groupBy, nodes: nodes! } as DataSetGroupNode<K, T>));
 }
 
-export const createDataSet = <T extends Record<string, any>>(data: T[], initialOptions?: { sort?: SortOptions<T>, group?: GroupOptions<T> }): DataSet<T> => {
+export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>, initialOptions?: { sort?: SortOptions<T>, group?: GroupOptions<T> }): DataSet<T> => {
     const [state, setState] = createStore<DataSetState<T>>({
-        value: deepCopy(data),
-        snapshot: data,
+        value: deepCopy(data()),
+        snapshot: data(),
         sorting: initialOptions?.sort,
         grouping: initialOptions?.group,
     });
@@ -101,8 +99,79 @@ export const createDataSet = <T extends Record<string, any>>(data: T[], initialO
         return deepDiff(state.snapshot, state.value).toArray();
     });
 
+    const apply = (data: T[], mutations: Mutation[]) => {
+        for (const mutation of mutations) {
+            const path = mutation.key.split('.');
+
+            switch (mutation.kind) {
+                case MutarionKind.Create: {
+                    let v: any = data;
+                    for (const part of path.slice(0, -1)) {
+                        if (v[part] === undefined) {
+                            v[part] = {};
+                        }
+
+                        v = v[part];
+                    }
+
+                    v[path.at(-1)!] = mutation.value;
+
+                    break;
+                }
+
+                case MutarionKind.Delete: {
+                    let v: any = data;
+                    for (const part of path.slice(0, -1)) {
+                        if (v === undefined) {
+                            break;
+                        }
+
+                        v = v[part];
+                    }
+
+                    if (v !== undefined) {
+                        delete v[path.at(-1)!];
+                    }
+
+                    break;
+                }
+
+                case MutarionKind.Update: {
+                    let v: any = data;
+                    for (const part of path.slice(0, -1)) {
+                        if (v === undefined) {
+                            break;
+                        }
+
+                        v = v[part];
+                    }
+
+                    if (v !== undefined) {
+                        v[path.at(-1)!] = mutation.value;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return data;
+    };
+
+    createEffect(() => {
+        const next = data();
+        const nextValue = apply(deepCopy(next), untrack(() => mutations()));
+
+        setState('value', nextValue);
+        setState('snapshot', next);
+        ;
+    });
+
+    createEffect(() => {
+        console.log('dataset', mutations());
+    });
+
     const set: DataSet<T> = {
-        data,
         nodes,
         get value() {
             return state.value;
@@ -148,5 +217,5 @@ export const createDataSet = <T extends Record<string, any>>(data: T[], initialO
         },
     };
 
-    return set
+    return set;
 };

@@ -1,7 +1,7 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, JSX } from "solid-js";
+import { Accessor, Component, createEffect, createMemo, createSignal, JSX, untrack } from "solid-js";
 import { decode, Mutation } from "~/utilities";
 import { Column, GridApi as GridCompApi, Grid as GridComp } from "~/components/grid";
-import { createDataSet, DataSetNode, DataSetRowNode } from "~/components/table";
+import { createDataSet, DataSetNode, DataSetRowNode } from "~/features/dataset";
 import { SelectionItem } from "../selectable";
 import { useI18n } from "../i18n";
 import { debounce } from "@solid-primitives/scheduled";
@@ -35,7 +35,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
     const { t } = useI18n();
 
     const [addedLocales, setAddedLocales] = createSignal<string[]>([]);
-    const rows = createMemo(() => createDataSet<Entry>(props.rows, { group: { by: 'key', with: groupBy } }));
+    const rows = createDataSet<Entry>(() => props.rows, { group: { by: 'key', with: groupBy } });
     const locales = createMemo(() => [...props.locales, ...addedLocales()]);
     const columns = createMemo<Column<Entry>[]>(() => [
         {
@@ -47,7 +47,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             id: lang,
             label: lang,
             renderer: ({ row, column, value, mutate }) => {
-                const entry = rows().value[row]!;
+                const entry = rows.value[row]!;
 
                 return <TextArea row={row} key={entry.key} lang={String(column)} value={value ?? ''} oninput={e => mutate(e.data ?? '')} />;
             },
@@ -56,22 +56,28 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
 
     const [api, setApi] = createSignal<GridCompApi<Entry>>();
 
+    // Normalize dataset in order to make sure all the files have the correct structure
     createEffect(() => {
-        const r = rows();
-        const l = addedLocales();
+        // For tracking
+        props.rows
+        const value = untrack(() => rows.value);
 
-        r.mutateEach(({ key, ...rest }) => ({ key, ...rest, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
+        rows.mutateEach(({ key, ...locales }) => ({ key, ...Object.fromEntries(Object.entries(locales).map(([locale, value]) => [locale, value ?? ''])) }))
     });
 
     createEffect(() => {
-        const r = rows();
+        const l = addedLocales();
 
+        rows.mutateEach(({ key, ...rest }) => ({ key, ...rest, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
+    });
+
+    createEffect(() => {
         props.api?.({
-            mutations: r.mutations,
+            mutations: rows.mutations,
             selection: createMemo(() => api()?.selection() ?? []),
-            remove: r.remove,
+            remove: rows.remove,
             addKey(key) {
-                r.insert({ key, ...Object.fromEntries(locales().map(l => [l, ''])) });
+                rows.insert({ key, ...Object.fromEntries(locales().map(l => [l, ''])) });
             },
             addLocale(locale) {
                 setAddedLocales(locales => new Set([...locales, locale]).values().toArray())
@@ -85,7 +91,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
         });
     });
 
-    return <GridComp data={rows()} columns={columns()} api={setApi} />;
+    return <GridComp data={rows} columns={columns()} api={setApi} />;
 };
 
 const TextArea: Component<{ row: number, key: string, lang: string, value: string, oninput?: (event: InputEvent) => any }> = (props) => {

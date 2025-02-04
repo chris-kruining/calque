@@ -1,6 +1,6 @@
 import { Accessor, createContext, createEffect, createMemo, createSignal, For, JSX, Match, Show, Switch, useContext } from "solid-js";
 import { selectable, SelectionItem, SelectionProvider, useSelection } from "~/features/selectable";
-import { DataSetRowNode, DataSetNode, DataSet } from './dataset';
+import { DataSetRowNode, DataSetNode, DataSet } from '~/features/dataset';
 import { FaSolidAngleDown, FaSolidSort, FaSolidSortDown, FaSolidSortUp } from "solid-icons/fa";
 import css from './table.module.css';
 

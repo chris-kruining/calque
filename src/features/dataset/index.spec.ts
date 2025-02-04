@@ -1,16 +1,17 @@
 import { describe, expect, it } from "bun:test";
-import { createDataSet } from "./dataset";
+import { createDataSet } from "./index";
+import { createSignal } from "solid-js";
 
 interface DataEntry {
     id: string;
     name: string;
     amount: number;
 };
-const defaultData: DataEntry[] = [
+const [defaultData] = createSignal<DataEntry[]>([
     { id: '1', name: 'a first name', amount: 30 },
     { id: '2', name: 'a second name', amount: 20 },
     { id: '3', name: 'a third name', amount: 10 },
-];
+]);
 
 describe('dataset', () => {
     describe('createDataset', () => {

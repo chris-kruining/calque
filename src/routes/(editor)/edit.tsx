@@ -40,8 +40,6 @@ async function* walk(directory: FileSystemDirectoryHandle, path: string[] = []):
     }
 };
 
-
-// interface Entries extends Map<string, Record<string, { value: string, handle: FileSystemFileHandle, id: string }>> { };
 interface Entries extends Map<string, { key: string, } & Record<string, { value: string, handle: FileSystemFileHandle, id: string }>> { };
 
 export default function Edit(props: ParentProps) {
@@ -123,7 +121,7 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
                     }
 
                     const entry = entries.get(index as any)!;
-                    return { kind: MutarionKind.Create, key: entry.key, lang, file: undefined, value: m.value };
+                    return { kind: MutarionKind.Create, key: entry.key, lang, file: files.get(lang), value: m.value };
                 }
 
                 case MutarionKind.Delete: {
@@ -148,6 +146,8 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
         }
 
         const groupedByFileId = Object.groupBy(muts, m => m.file?.id ?? 'undefined');
+
+        console.log(files, muts, groupedByFileId);
         const newFiles = Object.entries(Object.groupBy((groupedByFileId['undefined'] ?? []) as (Created & { lang: string, file: undefined })[], m => m.lang)).map(([lang, mutations]) => {
             const data = mutations!.reduce((aggregate, { key, value }) => {
                 let obj = aggregate;
@@ -387,7 +387,7 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<Gr
     const [contents] = createResource(() => files.latest, (files) => Promise.all(Object.entries(files).map(async ([id, { file, handle }]) => ({ id, handle, lang: file.name.split('.').at(0)!, entries: (await load(file))! }))), { initialValue: [] });
 
     const [entries, rows] = destructure(() => {
-        const template = contents.latest.map(({ lang, handle }) => [lang, { handle, value: '' }]);
+        const template = contents.latest.map(({ lang, handle }) => [lang, { handle, value: null }]);
         const merged = contents.latest.reduce((aggregate, { id, handle, lang, entries }) => {
             for (const [key, value] of entries.entries()) {
                 if (!aggregate.has(key)) {
