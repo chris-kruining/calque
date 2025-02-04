@@ -22,7 +22,7 @@ describe('dataset', () => {
             const actual = createDataSet(defaultData);
 
             // Assert
-            expect(actual).toMatchObject({ data: defaultData })
+            expect(actual).toMatchObject({ value: defaultData() })
         });
 
         it('can sort by a property', async () => {
@@ -46,7 +46,7 @@ describe('dataset', () => {
             const actual = createDataSet(defaultData, { group: { by: 'name' } });
 
             // Assert
-            expect(actual).toEqual(expect.objectContaining({ data: defaultData }))
+            expect(actual).toEqual(expect.objectContaining({ value: defaultData() }))
         });
 
         describe('mutate', () => {
