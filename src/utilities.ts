@@ -115,6 +115,10 @@ const entriesOf = (subject: object): Iterable<readonly [string | number, any]> =
         return subject.entries();
     }
 
+    if (subject === null || subject === undefined) {
+        return [];
+    }
+
     return Object.entries(subject);
 };
 
