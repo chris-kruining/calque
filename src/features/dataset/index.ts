@@ -100,8 +100,6 @@ export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>
     });
 
     const apply = (data: T[], mutations: Mutation[]) => {
-        console.log('APPLY', data, mutations);
-
         for (const mutation of mutations) {
             const path = mutation.key.split('.');
 
@@ -163,8 +161,6 @@ export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>
     createEffect(() => {
         const next = data();
         const nextValue = apply(deepCopy(next), untrack(() => mutations()));
-
-        console.log('EFFECT IS CALLED');
 
         setState('value', nextValue);
         setState('snapshot', next);
