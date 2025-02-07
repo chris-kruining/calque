@@ -2,7 +2,7 @@ import { Component, createEffect, createMemo, createResource, createSignal, For,
 import { Created, filter, MutarionKind, Mutation, splitAt } from "~/utilities";
 import { Sidebar } from "~/components/sidebar";
 import { Menu } from "~/features/menu";
-import { Grid, load, readFiles, TreeProvider, Tree, useFiles } from "~/features/file";
+import { Grid, read, readFiles, TreeProvider, Tree, useFiles } from "~/features/file";
 import { Command, CommandType, Context, createCommand, Modifier } from "~/features/command";
 import { Entry, GridApi } from "~/features/file/grid";
 import { Tab, Tabs } from "~/components/tabs";
@@ -383,7 +383,7 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<Gr
     const [api, setApi] = createSignal<GridApi>();
 
     const files = readFiles(() => props.directory);
-    const [contents] = createResource(() => files.latest, (files) => Promise.all(Object.entries(files).map(async ([id, { file, handle }]) => ({ id, handle, lang: file.name.split('.').at(0)!, entries: (await load(file))! }))), { initialValue: [] });
+    const [contents] = createResource(files, (files) => Promise.all(Object.entries(files).map(async ([id, { file, handle }]) => ({ id, handle, lang: file.name.split('.').at(0)!, entries: (await read(file))! }))), { initialValue: [] });
 
     const [entries, rows] = destructure(() => {
         const template = contents.latest.map(({ lang, handle }) => [lang, { handle, value: null }]);

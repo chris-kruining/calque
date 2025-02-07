@@ -4,7 +4,7 @@ import { filter } from "~/utilities";
 
 interface Files extends Record<string, { handle: FileSystemFileHandle, file: File }> { }
 
-export const load = (file: File): Promise<Map<string, string> | undefined> => {
+export const read = (file: File): Promise<Map<string, string> | undefined> => {
     switch (file.type) {
         case 'application/json': return json.load(file.stream())
 
