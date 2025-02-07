@@ -181,6 +181,13 @@ samp {
   display: inline-block;
 }
 
+@supports ((scrollbar-width: auto) and (scrollbar-width: auto)) {
+  :root {
+    scrollbar-color: var(--surface-300) transparent;
+    scrollbar-width: auto;
+  }
+}
+
 @property --hue {
   syntax: '<angle>';
   inherits: false;

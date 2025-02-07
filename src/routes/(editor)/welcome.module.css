@@ -17,5 +17,18 @@
         flex-flow: column;
         gap: var(--padding-s);
         padding-inline-start: var(--padding-l);
+
+        @media (hover) and (prefers-reduced-motion: no-preference) {
+            & > li {
+                transform-origin: left center;
+                transition: opacity .2s ease-in-out .1s, transform .1s ease-in-out .1s;
+            }
+
+            &:has(> li:hover) > li:not(:hover),
+            &:has(> li:focus-within) > li:not(:focus-within) {
+                opacity: .25;
+                transform: scale(.9);
+            }
+        }
     }
 }
