@@ -19,7 +19,7 @@ var context = {
   deployedAt: deployedAt
 }
 
-resource calqueResourceGroup 'Microsoft.Resources/resourceGroups@2024-07-01' = {
+resource calqueResourceGroup 'Microsoft.Resources/resourceGroups@2024-11-01' = {
   name: 'rg-${locationAbbreviation}-${environment}-${projectName}'
   location: location
 }
