@@ -1,5 +1,5 @@
 import { Component, createEffect, createMemo, createResource, createSignal, For, onMount, ParentProps, Setter, Show } from "solid-js";
-import { Created, filter, MutarionKind, Mutation, splitAt } from "~/utilities";
+import { Created, MutarionKind, Mutation, splitAt } from "~/utilities";
 import { Sidebar } from "~/components/sidebar";
 import { Menu } from "~/features/menu";
 import { Grid, read, readFiles, TreeProvider, Tree, useFiles } from "~/features/file";
@@ -14,31 +14,9 @@ import { makePersisted } from "@solid-primitives/storage";
 import { writeClipboard } from "@solid-primitives/clipboard";
 import { destructure } from "@solid-primitives/destructure";
 import css from "./edit.module.css";
+import { contentsOf } from "~/features/file/helpers";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
-
-async function* walk(directory: FileSystemDirectoryHandle, path: string[] = []): AsyncGenerator<{ id: string, handle: FileSystemFileHandle, path: string[], lang: string, entries: Map<string, string> }, void, never> {
-    for await (const handle of directory.values()) {
-        if (handle.kind === 'directory') {
-            yield* walk(handle, [...path, handle.name]);
-
-            continue;
-        }
-
-        if (!handle.name.endsWith('.json')) {
-            continue;
-        }
-
-        const id = await handle.getUniqueId();
-        const file = await handle.getFile();
-        const lang = file.name.split('.').at(0)!;
-        const entries = await load(file);
-
-        if (entries !== undefined) {
-            yield { id, handle, path, lang, entries };
-        }
-    }
-};
 
 interface Entries extends Map<string, { key: string, } & Record<string, { value: string, handle: FileSystemFileHandle, id: string }>> { };
 
@@ -74,25 +52,17 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
     const { t } = useI18n();
 
     const tabs = createMemo(() => filesContext.files().map(({ key, handle }) => {
-        const [api, setApi] = createSignal<(GridApi & { addLocale(locale: string): void })>();
+        const [api, setApi] = createSignal<GridApi>();
         const [entries, setEntries] = createSignal<Entries>(new Map());
-        const [files, setFiles] = createSignal<Map<string, { id: string, handle: FileSystemFileHandle }>>(new Map());
-
-        (async () => {
-            const files = await Array.fromAsync(
-                filter(handle.values(), entry => entry.kind === 'file'),
-                async file => [file.name.split('.').at(0)!, { handle: file, id: await file.getUniqueId() }] as const
-            );
-
-            setFiles(new Map(files));
-        })();
+        const __files = readFiles(() => handle);
+        const files = createMemo(() => new Map(Object.entries(__files()).map(([id, { file, handle }]) => [file.name.split('.').at(0)!, { handle, id }])));
 
         return ({ key, handle, api, setApi, entries, setEntries, files });
     }));
     const [active, setActive] = makePersisted(createSignal<string>(), { name: 'edit__aciveTab' });
-    const [contents, setContents] = createSignal<Map<string, Map<string, string>>>(new Map());
     const [newKeyPrompt, setNewKeyPrompt] = createSignal<PromptApi>();
     const [newLanguagePrompt, setNewLanguagePrompt] = createSignal<PromptApi>();
+    const contents = contentsOf(() => props.root);
 
     const tab = createMemo(() => {
         const name = active();
@@ -223,14 +193,6 @@ const Editor: Component<{ root: FileSystemDirectoryHandle }> = (props) => {
         }).toArray() as (readonly [({ existing: true, handle: FileSystemFileHandle } | { existing: false, name: string }), Record<string, any>])[];
 
         return existingFiles.concat(newFiles);
-    });
-
-    createEffect(() => {
-        const directory = props.root;
-
-        (async () => {
-            setContents(new Map(await Array.fromAsync(walk(directory), ({ id, entries }) => [id, entries] as const)))
-        })();
     });
 
     const commands = {
