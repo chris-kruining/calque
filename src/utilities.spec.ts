@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, afterAll, spyOn } from 'bun:test';
-import { decode, deepCopy, deepDiff, filter, map, MutarionKind, splitAt } from './utilities';
+import { decode, deepCopy, deepDiff, filter, gen__split_by_filter, map, MutarionKind, split_by_filter, splitAt } from './utilities';
 import { install } from '@sinonjs/fake-timers';
 
 type MilliSeconds = number;
@@ -69,6 +69,44 @@ describe('utilities', () => {
             // Assert
             expect(a).toBe(expected[0]);
             expect(b).toBe(expected[1]);
+        });
+    });
+
+    describe('gen__split_by_filter', () => {
+        it('should split the given string at the given filter', async () => {
+            // Arrange
+            const given = 'this is some string in which the word filter splits it';
+            const filter = 'some';
+            const expected: (readonly [boolean, string])[] = [
+                [false, 'this is '],
+                [true, 'some'],
+                [false, ' string in which the word filter splits it'],
+            ] as const;
+
+            // Act
+            const actual = Array.from<readonly [boolean, string]>(gen__split_by_filter(given, filter));
+
+            // Assert
+            expect(actual).toEqual(expected);
+        });
+    });
+
+    describe('split_by_filter', () => {
+        it('should split the given string at the given filter', async () => {
+            // Arrange
+            const given = 'this is some string in which the word filter splits it';
+            const filter = 'some';
+            const expected: (readonly [boolean, string])[] = [
+                [false, 'this is '],
+                [true, 'some'],
+                [false, ' string in which the word filter splits it'],
+            ] as const;
+
+            // Act
+            const actual = split_by_filter(given, filter);
+
+            // Assert
+            expect(actual).toEqual(expected);
         });
     });
 
@@ -382,6 +420,30 @@ describe('utilities', () => {
             expect(actual).toEqual([
                 { kind: MutarionKind.Update, key: 'key.key', original: 'old', value: 'new' },
             ]);
+        });
+
+        it('should handle `null` values', async () => {
+            // arrange
+            const a = { key: null };
+            const b = { key: null };
+
+            // Act
+            const actual = deepDiff(a, b).toArray();
+
+            // Arrange 
+            expect(actual).toEqual([]);
+        });
+
+        it('should handle `undefined` values', async () => {
+            // arrange
+            const a = { key: undefined };
+            const b = { key: undefined };
+
+            // Act
+            const actual = deepDiff(a, b).toArray();
+
+            // Arrange 
+            expect(actual).toEqual([]);
         });
     });
 
