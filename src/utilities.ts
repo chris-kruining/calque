@@ -9,6 +9,23 @@ export const splitAt = (subject: string, index: number): readonly [string, strin
 
     return [subject.slice(0, index), subject.slice(index + 1)];
 };
+export function* gen__split_by_filter(subject: string, filter: string): Generator<readonly [boolean, string], void, unknown> {
+    let lastIndex = 0;
+
+    for (const { 0: match, index, ...rest } of subject.matchAll(new RegExp(filter, 'gmi'))) {
+        const end = index + match.length;
+
+        yield [false, subject.slice(lastIndex, index)];
+        yield [true, subject.slice(index, end)];
+
+        lastIndex = end;
+    }
+
+    yield [false, subject.slice(lastIndex, subject.length)];
+}
+export function split_by_filter(subject: string, filter: string): (readonly [boolean, string])[] {
+    return Array.from<readonly [boolean, string]>(gen__split_by_filter(subject, filter));
+}
 
 const decodeRegex = /(?<!\\)\\(t|b|n|r|f|'|"|u[0-9a-f]{1,4})/gi;
 const decodeReplacer = (_: any, char: string) => ({

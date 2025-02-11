@@ -1,4 +1,4 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, JSX, untrack } from "solid-js";
+import { Accessor, Component, createEffect, createMemo, createSignal, For, JSX, Show, untrack } from "solid-js";
 import { decode, Mutation } from "~/utilities";
 import { Column, GridApi as GridCompApi, Grid as GridComp } from "~/components/grid";
 import { createDataSet, DataSetNode, DataSetRowNode } from "~/features/dataset";
@@ -6,6 +6,7 @@ import { SelectionItem } from "../selectable";
 import { useI18n } from "../i18n";
 import { debounce } from "@solid-primitives/scheduled";
 import css from "./grid.module.css"
+import { Textarea } from "~/components/textarea";
 
 export type Entry = { key: string } & { [lang: string]: string };
 export interface GridApi {
@@ -43,7 +44,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             label: t('feature.file.grid.key'),
             renderer: ({ value }) => props.children?.(value) ?? value.split('.').at(-1),
         },
-        ...locales().map<Column<Entry>>(lang => ({
+        ...locales().toSorted().map<Column<Entry>>(lang => ({
             id: lang,
             label: lang,
             renderer: ({ row, column, value, mutate }) => {
@@ -59,8 +60,8 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
     // Normalize dataset in order to make sure all the files have the correct structure
     createEffect(() => {
         // For tracking
-        props.rows
-        const value = untrack(() => rows.value);
+        props.rows;
+        // const value = untrack(() => rows.value);
 
         rows.mutateEach(({ key, ...locales }) => ({ key, ...Object.fromEntries(Object.entries(locales).map(([locale, value]) => [locale, value ?? ''])) }))
     });
@@ -95,44 +96,10 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
 };
 
 const TextArea: Component<{ row: number, key: string, lang: string, value: string, oninput?: (event: InputEvent) => any }> = (props) => {
-    const [element, setElement] = createSignal<HTMLTextAreaElement>();
-
-    const resize = () => {
-        const el = element();
-
-        if (!el) {
-            return;
-        }
-
-        el.style.height = `1px`;
-        el.style.height = `${2 + element()!.scrollHeight}px`;
-    };
-
-    const mutate = debounce(() => {
-        props.oninput?.(new InputEvent('input', {
-            data: element()?.value.trim(),
-        }))
-    }, 300);
-
-    const onKeyUp = (e: KeyboardEvent) => {
-        resize();
-        mutate();
-    };
-
-    const value = createMemo(() => decode(props.value));
-
-    return <textarea
-        ref={setElement}
+    return <Textarea
         class={css.textarea}
-        value={value()}
+        value={props.value}
         lang={props.lang}
-        placeholder={`${props.key} in ${props.lang}`}
-        name={`${props.row}[${props.lang}]`}
-        dir="auto"
-        spellcheck={true}
-        wrap="soft"
-        onkeyup={onKeyUp}
-        on:keydown={e => e.stopPropagation()}
-        on:pointerdown={e => e.stopPropagation()}
+        oninput={props.oninput}
     />
 };

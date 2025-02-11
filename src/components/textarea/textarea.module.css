@@ -1,0 +1,24 @@
+.textarea {
+    /* Make sure resizing works as intended */
+    display: block;
+    overflow: clip auto;
+    resize: block;
+
+    white-space: wrap;
+    min-block-size: max(2em, 100%);
+    max-block-size: 50em;
+
+    unicode-bidi: plaintext;
+    white-space-collapse: preserve;
+    text-wrap-mode: wrap;
+    overflow-wrap: break-word;
+    cursor: text;
+}
+
+.spellingError {
+    text-decoration-line: spelling-error;
+}
+
+.grammarError {
+    text-decoration-line: grammar-error;
+}

@@ -3,6 +3,7 @@ import { useI18n } from "../i18n";
 import { CommandType } from "./command";
 import { useCommands } from "./context";
 import css from "./palette.module.css";
+import { split_by_filter } from "~/utilities";
 
 export interface CommandPaletteApi {
     readonly open: Accessor<boolean>;
@@ -59,11 +60,9 @@ export const CommandPalette: Component<{ api?: (api: CommandPaletteApi) => any, 
             (item, ctx) => {
                 const label = t(item.label) as string;
                 const filter = ctx.filter().toLowerCase();
-                const length = filter.length;
-                const indices = [0, ...Array.from(label.matchAll(new RegExp(filter, 'gi')).flatMap(({ index }) => [index, index + length]))];
 
-                return <For each={indices.map((current, i) => label.slice(current, indices[i + 1]))}>{
-                    (part) => <Show when={part.toLowerCase() === filter} fallback={part}><b>{part}</b></Show>
+                return <For each={split_by_filter(label, filter)}>{
+                    ([is_hit, part]) => <Show when={is_hit} fallback={part}><b>{part}</b></Show>
                 }</For>;
             }
         }</SearchableList>
