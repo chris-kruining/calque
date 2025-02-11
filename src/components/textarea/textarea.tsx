@@ -51,8 +51,10 @@ export function Textarea(props: TextareaProps) {
         return false;
     };
 
-    const spellingErrors = createMemo(() => spellChecker(value(), props.lang));
-    const grammarErrors = createMemo(() => grammarChecker(value(), props.lang));
+    // const spellingErrors = createMemo(() => spellChecker(value(), props.lang));
+    // const grammarErrors = createMemo(() => grammarChecker(value(), props.lang));
+    const spellingErrors = createMemo(() => []);
+    const grammarErrors = createMemo(() => []);
 
     const html = createMemo(() => {
         return value().split('').map((letter, index) => {
