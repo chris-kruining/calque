@@ -58,6 +58,13 @@ export function Textarea(props: TextareaProps) {
         }))
     }, 300);
 
+    const onInput = (e: InputEvent) => {
+        const target = e.target as HTMLElement;
+
+        console.log(e);
+        console.log(target.innerText, target.textContent, target.innerHTML);
+    };
+
     const onKeyUp = (e: KeyboardEvent) => {
         e.stopPropagation();
         e.preventDefault();
@@ -92,6 +99,7 @@ export function Textarea(props: TextareaProps) {
         class={`${css.textarea} ${props.class}`}
         lang={props.lang}
         dir="auto"
+        oninput={onInput}
         onkeyup={onKeyUp}
         on:keydown={e => e.stopPropagation()}
         on:pointerdown={e => e.stopPropagation()}
