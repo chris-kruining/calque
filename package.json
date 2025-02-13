@@ -10,6 +10,7 @@
     "@solid-primitives/destructure": "^0.2.0",
     "@solid-primitives/i18n": "^2.2.0",
     "@solid-primitives/scheduled": "^1.5.0",
+    "@solid-primitives/selection": "^0.1.0",
     "@solid-primitives/storage": "^4.3.1",
     "@solid-primitives/timer": "^1.4.0",
     "@solidjs/meta": "^0.29.4",
@@ -33,7 +34,6 @@
     "@types/wicg-file-system-access": "^2023.10.5",
     "bun-types": "^1.2.2",
     "jsdom": "^26.0.0",
-    "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-solid-svg": "^0.8.1",
     "workbox-window": "^7.3.0"
   },

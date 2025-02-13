@@ -2,5 +2,13 @@
     background-color: var(--surface-600);
     color: var(--text-1);
     border: 1px solid var(--text-2);
-    border-radius: var(--radii-s);
+    border-radius: var(--radii-m);
+    padding: var(--padding-s);
+
+    overflow: auto !important;
+    max-inline-size: 30em;
+
+    & * {
+        white-space: nowrap;
+    }
 }
