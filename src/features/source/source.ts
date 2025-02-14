@@ -119,9 +119,11 @@ const grammarChecker = checker(/\w+\s+\w+/gi);
 
 function checker(regex: RegExp) {
     return (subject: string, lang: string): (readonly [boolean, string])[] => {
+        return [];
+
         let lastIndex = 0;
 
-        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= .5).flatMap<readonly [boolean, string]>(({ 0: match, index }) => {
+        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= .99).flatMap<readonly [boolean, string]>(({ 0: match, index }) => {
             const end = index + match.length;
             const result = [
                 [false, subject.slice(lastIndex, index)],
