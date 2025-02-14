@@ -48,9 +48,16 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
             id: lang,
             label: lang,
             renderer: ({ row, column, value, mutate }) => {
-                const entry = rows.value[row]!;
+                const lang = String(column);
+                const { key } = rows.value[row]!;
 
-                return <TextArea row={row} key={entry.key} lang={String(column)} value={value ?? ''} oninput={e => mutate(e.data ?? '')} />;
+                return <Textarea
+                    class={css.textarea}
+                    value={value ?? ''}
+                    lang={lang}
+                    oninput={next => mutate(next)}
+                    placeholder={`${key} in ${lang}`}
+                />
             },
         }))
     ]);
@@ -95,7 +102,7 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
     return <GridComp data={rows} columns={columns()} api={setApi} />;
 };
 
-const TextArea: Component<{ row: number, key: string, lang: string, value: string, oninput?: (event: InputEvent) => any }> = (props) => {
+const TextArea: Component<{ row: number, key: string, lang: string, value: string, oninput?: (next: string) => any }> = (props) => {
     return <Textarea
         class={css.textarea}
         value={props.value}

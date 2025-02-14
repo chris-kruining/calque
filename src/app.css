@@ -2,19 +2,19 @@
   --hue: 182.77deg;
   --accent-ofset: 180;
 
-  --primary-100: oklch(from var(--primary-500) .95 c h);
-  --primary-300: oklch(from var(--primary-500) .9 c h);
-  --primary-500: light-dark(oklch(.7503 0.117 var(--hue)), oklch(.8549 0.1149 var(--hue)));
-  --primary-600: oklch(from var(--primary-500) .7 c h);
-  --primary-700: oklch(from var(--primary-500) .6 c h);
-  --primary-900: oklch(from var(--primary-500) .35 calc(c + .15) h);
+  --primary-100: oklch(from var(--primary-500) .35 c h);
+  --primary-300: oklch(from var(--primary-500) .6 c h);
+  --primary-500: light-dark(oklch(.7 0.117 var(--hue)), oklch(.7 0.1149 var(--hue)));
+  --primary-600: oklch(from var(--primary-500) .85 c h);
+  --primary-700: oklch(from var(--primary-500) .9 c h);
+  --primary-900: oklch(from var(--primary-500) .95 calc(c + .15) h);
 
-  --secondary-100: oklch(from var(--primary-500) .95 c calc(h + var(--accent-ofset)));
-  --secondary-300: oklch(from var(--primary-500) .9 c calc(h + var(--accent-ofset)));
-  --secondary-500: oklch(from var(--primary-500) .85 c calc(h + var(--accent-ofset)));
-  --secondary-600: oklch(from var(--primary-500) .7 c calc(h + var(--accent-ofset)));
-  --secondary-700: oklch(from var(--primary-500) .6 c calc(h + var(--accent-ofset)));
-  --secondary-900: oklch(from var(--primary-500) .35 calc(c + .15) calc(h + var(--accent-ofset)));
+  --secondary-100: oklch(from var(--primary-500) .35 c calc(h + var(--accent-ofset)));
+  --secondary-300: oklch(from var(--primary-500) .6 c calc(h + var(--accent-ofset)));
+  --secondary-500: oklch(from var(--primary-500) .7 c calc(h + var(--accent-ofset)));
+  --secondary-600: oklch(from var(--primary-500) .85 c calc(h + var(--accent-ofset)));
+  --secondary-700: oklch(from var(--primary-500) .9 c calc(h + var(--accent-ofset)));
+  --secondary-900: oklch(from var(--primary-500) .95 calc(c + .15) calc(h + var(--accent-ofset)));
 
   --surface-300: light-dark(oklch(from var(--primary-500) .9 .02 h), oklch(from var(--primary-500) .2 .02 h));
   --surface-400: oklch(from var(--surface-300) calc(l + .025) c h);
@@ -162,6 +162,24 @@ del {
   color: oklch(from var(--fail) .1 .2 h);
 }
 
+blockquote {
+  position: relative;
+  padding: var(--padding-m);
+  padding-inline-start: calc(.5em + var(--padding-m));
+
+  &::before {
+    content: '';
+    display: block;
+
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    inline-size: .5em;
+    block-size: 100%;
+    background-color: var(--primary-600);
+  }
+}
+
 kbd {
   display: inline-block;
   background-color: var(--surface-600);
@@ -179,6 +197,11 @@ kbd {
 
 samp {
   display: inline-block;
+}
+
+[contenteditable][data-placeholder]:not(:focus):empty::before {
+  content: attr(data-placeholder);
+  color: oklch(from var(--text-2) l c h / .6)
 }
 
 @supports ((scrollbar-width: auto) and (scrollbar-width: auto)) {

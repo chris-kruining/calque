@@ -1,3 +1,4 @@
+import { decode } from "~/utilities";
 
 export async function load(stream: ReadableStream<Uint8Array>): Promise<Map<string, string>> {
     return new Map(await Array.fromAsync(parse(stream), ({ key, value }) => [key, value]));
@@ -67,7 +68,7 @@ const states = {
                             expect: 'key',
                         });
 
-                        next.entry = { key: path.join('.'), value: token.value };
+                        next.entry = { key: path.join('.'), value: decode(token.value) };
 
                         return next
                     }

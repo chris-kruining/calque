@@ -390,52 +390,17 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<Gr
 
     const copyKey = createCommand('page.edit.command.copyKey', (key: string) => writeClipboard(key));
 
-    const tempVal = `
-# Header
+    return <Grid rows={rows()} locales={locales()} api={setApi}>{
+        key => {
+            return <Context.Root commands={[copyKey.with(key)]}>
+                <Context.Menu>{
+                    command => <Command.Handle command={command} />
+                }</Context.Menu>
 
-this is **a string** that contains bolded text
-
-this is *a string* that contains italicized text
-
-> Dorothy followed her through many of the beautiful rooms in her castle.
-
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
->> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
-
-> #### The quarterly results look great!
->
-> - Revenue was off the chart.
-> - Profits were higher than ever.
->
->  *Everything* is going according to **plan**.
-
-- First item
-- Second item
-- Third item
-- Fourth item
-    `;
-    const { out: [html, update] } = createSource(createMarkdownParser(), createHtmlParser(), tempVal);
-
-    createEffect(() => {
-        console.log(html());
-    });
-
-    return <>
-        <div contentEditable innerHTML={html()} />
-
-        <Grid rows={rows()} locales={locales()} api={setApi}>{
-            key => {
-                return <Context.Root commands={[copyKey.with(key)]}>
-                    <Context.Menu>{
-                        command => <Command.Handle command={command} />
-                    }</Context.Menu>
-
-                    <Context.Handle>{key.split('.').at(-1)!}</Context.Handle>
-                </Context.Root>;
-            }
-        }</Grid>
-    </>;
+                <Context.Handle>{key.split('.').at(-1)!}</Context.Handle>
+            </Context.Root>;
+        }
+    }</Grid>;
 };
 
 const Blank: Component<{ open: CommandType }> = (props) => {

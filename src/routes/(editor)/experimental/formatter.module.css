@@ -1,0 +1,21 @@
+.root {
+    margin: 1em;
+    padding: .5em;
+    gap: 1em;
+    display: grid;
+
+    grid: 100% / repeat(2, minmax(0, 1fr));
+
+    inline-size: calc(100% - 2em);
+    block-size: calc(100% - 2em);
+
+    place-content: start;
+    background-color: var(--surface-500);
+    border-radius: var(--radii-xl);
+
+    & > * {
+        overflow: auto;
+        padding: .5em;
+        background-color: transparent;
+    }
+}
