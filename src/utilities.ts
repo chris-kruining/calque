@@ -12,7 +12,7 @@ export const splitAt = (subject: string, index: number): readonly [string, strin
 export function* gen__split_by_filter(subject: string, filter: string): Generator<readonly [boolean, string], void, unknown> {
     let lastIndex = 0;
 
-    for (const { 0: match, index, ...rest } of subject.matchAll(new RegExp(filter, 'gmi'))) {
+    for (const { 0: match, index } of subject.matchAll(new RegExp(filter, 'gmi'))) {
         const end = index + match.length;
 
         yield [false, subject.slice(lastIndex, index)];

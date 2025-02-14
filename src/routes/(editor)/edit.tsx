@@ -15,6 +15,7 @@ import { writeClipboard } from "@solid-primitives/clipboard";
 import { destructure } from "@solid-primitives/destructure";
 import css from "./edit.module.css";
 import { contentsOf } from "~/features/file/helpers";
+import { createHtmlParser, createMarkdownParser, createSource } from "~/features/source";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
 

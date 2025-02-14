@@ -1,101 +1,71 @@
-import { createEffect, createMemo, createSignal, untrack } from 'solid-js';
-import { decode } from '~/utilities';
+import { createEffect, createMemo, untrack } from 'solid-js';
 import { debounce } from '@solid-primitives/scheduled';
 import { createSelection } from '@solid-primitives/selection';
 import { defaultChecker as spellChecker } from './spellChecker';
 import { defaultChecker as grammarChecker } from './grammarChecker';
+import { createSource } from '~/features/source';
 import css from './textarea.module.css';
 
 interface TextareaProps {
     class?: string;
     value: string;
     lang: string;
-    oninput?: (event: InputEvent) => any;
+    placeholder?: string;
+    oninput?: (next: string) => any;
     spellChecker?: any;
     grammarChecker?: any;
 }
 
 export function Textarea(props: TextareaProps) {
     const [selection, setSelection] = createSelection();
-    const [value, setValue] = createSignal<string>(decode(props.value));
-    const [element, setElement] = createSignal<HTMLTextAreaElement>();
+
+    const source = createSource(props.value);
 
     createEffect(() => {
-        setValue(decode(props.value));
+        props.oninput?.(source.in);
     });
 
     createEffect(() => {
-        // For tracking
-        value();
+        source.in = props.value;
+    });
 
-        const root = untrack(() => element());
+    const onInput = debounce(() => {
         const [el, start, end] = untrack(() => selection());
 
-        if (el !== root) {
-            return;
+        if (el) {
+            source.out = el.innerHTML;
+
+            el.style.height = `1px`;
+            el.style.height = `${2 + el.scrollHeight}px`;
+
+            setSelection([el, start, end]);
         }
-
-        // TODO :: this needs to be calculated based on the modification done
-        const offset = 1;
-
-        setSelection([el, start + offset, end + offset]);
-    });
-
-    const resize = () => {
-        const el = element();
-
-        if (!el) {
-            return;
-        }
-
-        el.style.height = `1px`;
-        el.style.height = `${2 + element()!.scrollHeight}px`;
-    };
-
-    const mutate = debounce(() => {
-        props.oninput?.(new InputEvent('input', {
-            data: value(),
-        }))
     }, 300);
 
-    const onKeyUp = (e: KeyboardEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+    const spellingErrors = createMemo(() => spellChecker(source.out, props.lang));
+    const grammarErrors = createMemo(() => grammarChecker(source.out, props.lang));
 
-        setValue(element()!.textContent!);
+    // const html = createMemo(() => {
+    //     return source.out.split('').map((letter, index) => {
+    //         const spellingOpen = spellingErrors().some(([start]) => start === index) ? `<span class="${css.spellingError}">` : '';
+    //         const spellingClose = spellingErrors().some(([, end]) => end === index) ? `</span>` : '';
 
-        resize();
-        mutate();
+    //         const grammarOpen = grammarErrors().some(([start]) => start === index) ? `<span class="${css.grammarError}">` : '';
+    //         const grammarClose = grammarErrors().some(([, end]) => end === index) ? `</span>` : '';
 
-        return false;
-    };
-
-    // const spellingErrors = createMemo(() => spellChecker(value(), props.lang));
-    // const grammarErrors = createMemo(() => grammarChecker(value(), props.lang));
-    const spellingErrors = createMemo(() => []);
-    const grammarErrors = createMemo(() => []);
-
-    const html = createMemo(() => {
-        return value().split('').map((letter, index) => {
-            const spellingOpen = spellingErrors().some(([start]) => start === index) ? `<span class="${css.spellingError}">` : '';
-            const spellingClose = spellingErrors().some(([, end]) => end === index) ? `</span>` : '';
-
-            const grammarOpen = grammarErrors().some(([start]) => start === index) ? `<span class="${css.grammarError}">` : '';
-            const grammarClose = grammarErrors().some(([, end]) => end === index) ? `</span>` : '';
-
-            return `${grammarOpen}${spellingOpen}${letter}${spellingClose}${grammarClose}`;
-        }).join('');
-    });
+    //         return `${grammarOpen}${spellingOpen}${letter}${spellingClose}${grammarClose}`;
+    //     }).join('');
+    // });
 
     return <div
-        ref={setElement}
         class={`${css.textarea} ${props.class}`}
-        lang={props.lang}
+        contentEditable
         dir="auto"
-        onkeyup={onKeyUp}
+        lang={props.lang}
+        oninput={onInput}
+        innerHTML={source.out}
+        data-placeholder={props.placeholder ?? ''}
         on:keydown={e => e.stopPropagation()}
         on:pointerdown={e => e.stopPropagation()}
-        contentEditable
-        innerHTML={html()}
     />;
 }
