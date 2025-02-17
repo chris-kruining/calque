@@ -1,4 +1,4 @@
-import { Accessor, children, createContext, createEffect, createMemo, createSignal, For, ParentComponent, Setter, Show, useContext } from "solid-js";
+import { Accessor, children, createContext, createEffect, createMemo, createSelector, createSignal, For, ParentComponent, Setter, Show, useContext } from "solid-js";
 import { Command, CommandType, noop, useCommands } from "~/features/command";
 import { AiOutlineClose } from "solid-icons/ai";
 import css from "./tabs.module.css";
@@ -6,7 +6,7 @@ import css from "./tabs.module.css";
 type CloseTabCommandType = CommandType<(id: string) => any>;
 interface TabsContextType {
     activate(id: string | undefined): void;
-    isActive(id: string): Accessor<boolean>;
+    isActive(id: string): boolean;
     readonly onClose: Accessor<CloseTabCommandType | undefined>
 }
 
@@ -24,6 +24,7 @@ const useTabs = () => {
 
 export const Tabs: ParentComponent<{ class?: string, active?: string, setActive?: Setter<string | undefined>, onClose?: CloseTabCommandType }> = (props) => {
     const [active, setActive] = createSignal<string | undefined>(props.active);
+    const isActive = createSelector<string | undefined, string>(active, (id, active) => id === active);
 
     createEffect(() => {
         props.setActive?.(active());
@@ -34,9 +35,11 @@ export const Tabs: ParentComponent<{ class?: string, active?: string, setActive?
             setActive(id);
         },
 
-        isActive(id: string) {
-            return createMemo(() => active() === id);
-        },
+        isActive,
+
+        // isActive(id: string) {
+        //     return createMemo(() => active() === id);
+        // },
 
         onClose: createMemo(() => props.onClose),
     };
@@ -91,7 +94,6 @@ const _Tabs: ParentComponent<{ class?: string, active: string | undefined, onClo
 export const Tab: ParentComponent<{ id: string, label: string, closable?: boolean }> = (props) => {
     const context = useTabs();
     const resolved = children(() => props.children);
-    const isActive = context.isActive(props.id);
 
     return <div
         id={props.id}
@@ -99,7 +101,7 @@ export const Tab: ParentComponent<{ id: string, label: string, closable?: boolea
         data-tab-label={props.label}
         data-tab-closable={props.closable}
     >
-        <Show when={isActive()}>
+        <Show when={context.isActive(props.id)}>
             <Command.Context for={context.onClose() ?? noop} with={[props.id]}>{resolved()}</Command.Context>
         </Show>
     </div>;
