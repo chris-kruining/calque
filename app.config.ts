@@ -1,5 +1,6 @@
 import { defineConfig } from '@solidjs/start/config';
-import solidSvg from 'vite-plugin-solid-svg'
+import solidSvg from 'vite-plugin-solid-svg';
+import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
     vite: {
@@ -16,6 +17,9 @@ export default defineConfig({
         //     },
         // },
         plugins: [
+            devtools({
+                autoname: true,
+            }),
             solidSvg(),
             {
                 name: 'temp',
