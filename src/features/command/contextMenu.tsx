@@ -41,7 +41,7 @@ const Menu: Component<{ children: (command: CommandType) => JSX.Element }> = (pr
         const event = context.event();
         const menu = root();
 
-        if (!menu) {
+        if (!menu || window.getComputedStyle(menu).display === '') {
             return;
         }
 
