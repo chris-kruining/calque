@@ -1,9 +1,9 @@
-import { Component, createContext, createEffect, createMemo, createSignal, For, onMount, untrack, useContext } from 'solid-js';
+import { Accessor, Component, createContext, createEffect, createMemo, createSignal, For, onMount, untrack, useContext } from 'solid-js';
 import { debounce } from '@solid-primitives/scheduled';
 import { createSelection } from '@solid-primitives/selection';
 import { createSource } from '~/features/source';
-import css from './textarea.module.css';
 import { isServer } from 'solid-js/web';
+import css from './textarea.module.css';
 
 interface TextareaProps {
     class?: string;
@@ -44,11 +44,34 @@ export function Textarea(props: TextareaProps) {
     }, 300);
 
     onMount(() => {
-        new MutationObserver(mutate).observe(editorRef()!, {
-            subtree: true,
-            childList: true,
-            characterData: true,
+        const ref = editorRef()!;
+
+        console.log(EditContext);
+
+        const context = new EditContext({
+            text: source.out,
         });
+
+        const sub = (event) => context.addEventListener(event, (e: Event) => console.log(event, e));
+
+        sub('textupdate');
+        sub('textformatupdate');
+        sub('characterboundupdate');
+
+        console.log(context);
+
+        ref.editContext = context;
+
+        const resize = () => context.updateControlBounds(ref.getBoundingClientRect());
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // new MutationObserver(mutate).observe(ref, {
+        //     subtree: true,
+        //     childList: true,
+        //     characterData: true,
+        // });
     });
 
     return <>
@@ -56,7 +79,6 @@ export function Textarea(props: TextareaProps) {
         <div
             ref={setEditorRef}
             class={`${css.textarea} ${props.class}`}
-            contentEditable
             dir="auto"
             lang={props.lang}
             innerHTML={source.out}
