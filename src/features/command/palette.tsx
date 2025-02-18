@@ -4,6 +4,7 @@ import { CommandType } from "./command";
 import { useCommands } from "./context";
 import css from "./palette.module.css";
 import { split_by_filter } from "~/utilities";
+import { getTextNodes } from "@solid-primitives/selection";
 
 export interface CommandPaletteApi {
     readonly open: Accessor<boolean>;
@@ -56,14 +57,9 @@ export const CommandPalette: Component<{ api?: (api: CommandPaletteApi) => any, 
     };
 
     return <dialog ref={setRoot} class={css.commandPalette} onClose={() => setOpen(false)}>
-        <SearchableList title="command palette" items={context.commands()} keySelector={item => t(item.label) as string} context={setSearch} onSubmit={onSubmit}>{
-            (item, ctx) => {
-                const label = t(item.label) as string;
-                const filter = ctx.filter().toLowerCase();
-
-                return <For each={split_by_filter(label, filter)}>{
-                    ([is_hit, part]) => <Show when={is_hit} fallback={part}><b>{part}</b></Show>
-                }</For>;
+        <SearchableList title="command palette" items={context.commands()} keySelector={item => (t(item.label) ?? item.label) as string} context={setSearch} onSubmit={onSubmit}>{
+            (item) => {
+                return <>{t(item.label) ?? item.label}</>;
             }
         }</SearchableList>
     </dialog>;
@@ -86,7 +82,7 @@ interface SearchableListProps<T> {
     title?: string;
     keySelector(item: T): string;
     filter?: (item: T, search: string) => boolean;
-    children(item: T, context: SearchContext<T>): JSX.Element;
+    children(item: T): JSX.Element;
     context?: (context: SearchContext<T>) => any,
     onSubmit?: SubmitHandler<T>;
 }
@@ -94,6 +90,7 @@ interface SearchableListProps<T> {
 function SearchableList<T>(props: SearchableListProps<T>): JSX.Element {
     const [term, setTerm] = createSignal<string>('');
     const [selected, setSelected] = createSignal<number>(0);
+    const [outputRef, setOutputRef] = createSignal<HTMLElement>();
     const id = createUniqueId();
 
     const results = createMemo(() => {
@@ -131,6 +128,25 @@ function SearchableList<T>(props: SearchableListProps<T>): JSX.Element {
         setSelected(current => Math.min(current, length));
     });
 
+    createEffect(() => {
+        const filter = term();
+        const regexp = new RegExp(filter, 'gi');
+        const ref = outputRef()!;
+
+        const ranges = getTextNodes(ref).flatMap(node => {
+            return node.textContent!.matchAll(regexp).map(({ index }) => {
+                const range = new Range();
+
+                range.setStart(node, index);
+                range.setEnd(node, index + filter.length);
+
+                return range;
+            }).toArray();
+        });
+
+        CSS.highlights.set('command-pelette-query', new Highlight(...ranges));
+    });
+
     const onKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'ArrowUp') {
             setSelected(current => Math.max(0, current - 1));
@@ -162,9 +178,9 @@ function SearchableList<T>(props: SearchableListProps<T>): JSX.Element {
         <form method="dialog" class={css.search} onkeydown={onKeyDown} onsubmit={onSubmit}>
             <input id={`search-${id}`} value={term()} onInput={(e) => setTerm(e.target.value)} placeholder="start typing for command" autofocus autocomplete="off" enterkeyhint="go" />
 
-            <output for={`search-${id}`}>
+            <output ref={setOutputRef} for={`search-${id}`}>
                 <For each={results()}>{
-                    (result, index) => <div class={`${index() === selected() ? css.selected : ''}`}>{props.children(result, ctx)}</div>
+                    (result, index) => <div class={`${index() === selected() ? css.selected : ''}`}>{props.children(result)}</div>
                 }</For>
             </output>
         </form>
@@ -173,4 +189,3 @@ function SearchableList<T>(props: SearchableListProps<T>): JSX.Element {
 
 let keyCounter = 0;
 const createUniqueId = () => `key-${keyCounter++}`;
-
