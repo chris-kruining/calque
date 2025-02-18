@@ -1,4 +1,5 @@
 .root {
+    position: relative;
     margin: 1em;
     padding: .5em;
     gap: 1em;
