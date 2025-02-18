@@ -38,6 +38,6 @@ export default function Formatter(props: {}) {
 
     return <div class={css.root}>
         <textarea oninput={onInput}>{value()}</textarea>
-        <Textarea value={value()} oninput={setValue} lang="en-GB" />
+        <Textarea class={css.textarea} value={value()} oninput={setValue} lang="en-GB" />
     </div>;
 }

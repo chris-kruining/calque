@@ -18,3 +18,34 @@
         text-decoration-line: grammar-error;
     }
 }
+
+.suggestions {
+    position-anchor: --suggestions;
+
+    position: fixed;
+    inset-inline-start: anchor(start);
+    inset-block-start: anchor(end);
+    position-try-fallbacks: flip-block, flip-inline;
+
+    margin: 0;
+    padding: var(--padding-m) 0;
+    border: 1px solid var(--surface-300);
+    background-color: var(--surface-600);
+    box-shadow: var(--shadow-2);
+    list-style: none;
+
+    display: none;
+    grid-auto-flow: row;
+
+    &:popover-open {
+        display: block grid;
+    }
+
+    & > li {
+        padding: var(--padding-m);
+
+        &:hover {
+            background-color: oklch(from var(--info) l c h / .5);
+        }
+    }
+}

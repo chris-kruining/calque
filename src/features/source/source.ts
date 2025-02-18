@@ -49,6 +49,8 @@ export function createSource(initalValue: string): Source {
     };
 }
 
+const isMarker = (node: Node) => node.type === 'element' && Object.hasOwn((node as Element).properties, 'dataMarker')
+
 function addErrors(): Transformer {
     const wrapInMarker = (text: Text, type: string): Element => ({
         type: 'element',
@@ -64,6 +66,10 @@ function addErrors(): Transformer {
     return function (tree) {
         visit(tree, n => n.type === 'text', (n, i, p: Element) => {
             if (typeof i !== 'number' || p === undefined) {
+                return;
+            }
+
+            if (isMarker(p)) {
                 return;
             }
 
@@ -85,6 +91,10 @@ function addErrors(): Transformer {
                 return;
             }
 
+            if (isMarker(p)) {
+                return;
+            }
+
             const errors = spellChecker(n.value, 'en-GB');
 
             if (errors.length === 0) {
@@ -101,15 +111,13 @@ function addErrors(): Transformer {
 }
 
 function clearErrors(): Transformer {
-    const test = (n: Node) => n.type === 'element' && Object.hasOwn(n.properties, 'dataMarker');
-
     return function (tree) {
-        visit(tree, test, (n, i, p: Element) => {
+        visit(tree, isMarker, (n, i, p: Element) => {
             if (typeof i !== 'number' || p === undefined) {
                 return;
             }
 
-            p.children.splice(i, 1, ...n.children);
+            p.children.splice(i, 1, ...(n as Element).children);
         })
     }
 }
@@ -122,8 +130,9 @@ function checker(regex: RegExp) {
         return [];
 
         let lastIndex = 0;
+        const threshold = .75//.99;
 
-        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= .99).flatMap<readonly [boolean, string]>(({ 0: match, index }) => {
+        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= threshold).flatMap<readonly [boolean, string]>(({ 0: match, index }) => {
             const end = index + match.length;
             const result = [
                 [false, subject.slice(lastIndex, index)],
