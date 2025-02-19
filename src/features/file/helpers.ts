@@ -1,4 +1,4 @@
-import { Accessor, createEffect, createResource, createSignal, InitializedResource, onCleanup, Resource } from "solid-js";
+import { Accessor, createEffect, from, createSignal } from "solid-js";
 import { json } from "./parser";
 import { filter } from "~/utilities";
 
@@ -88,17 +88,11 @@ function createPolled<S, T>(source: Accessor<S>, callback: (source: S, prev: T) 
 };
 
 function createTicker(interval: number): Accessor<boolean> {
-    const [tick, update] = createSignal(true);
+    return from(set => {
+        const ref = setInterval(() => set((v = true) => !v), interval);
 
-    const intervalId = setInterval(() => {
-        update(v => !v);
-    }, interval);
-
-    onCleanup(() => {
-        clearInterval(intervalId);
-    });
-
-    return tick;
+        return () => clearInterval(ref);
+    }) as Accessor<boolean>;
 }
 
 async function* walk(directory: FileSystemDirectoryHandle, path: string[] = []): AsyncGenerator<{ id: string, handle: FileSystemFileHandle, path: string[], file: File }, void, never> {
