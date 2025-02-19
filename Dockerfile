@@ -17,7 +17,7 @@ RUN echo "SESSION_SECRET=$(head -c 64 /dev/random | base64)" > .env
 
 ENV NODE_ENV=production
 ENV SERVER_PRESET=bun
-RUN bun test
+RUN bun run test
 RUN chmod +x node_modules/.bin/*
 RUN bun run build
 

@@ -1,6 +1,9 @@
-import { describe, beforeEach, it, expect, afterAll, spyOn } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, vi } from 'vitest';
 import { decode, deepCopy, deepDiff, filter, gen__split_by_filter, map, MutarionKind, split_by_filter, splitAt } from './utilities';
 import { install } from '@sinonjs/fake-timers';
+import { it } from '~/test-helpers';
+
+const { spyOn } = vi;
 
 type MilliSeconds = number;
 const useFakeTimers = () => {
