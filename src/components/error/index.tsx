@@ -1,0 +1,1 @@
+export { ErrorComp } from './error';
