@@ -7,9 +7,9 @@ import { decode } from "~/utilities";
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import remarkStringify from 'remark-stringify'
-import rehypeParse from 'rehype-dom-parse'
+import rehypeParse from 'rehype-parse'
 import rehypeRemark from 'rehype-remark'
-import rehypeStringify from 'rehype-dom-stringify'
+import rehypeStringify from 'rehype-stringify'
 
 interface SourceStore {
     in: string;
@@ -37,7 +37,6 @@ const inToOutProcessor = unified().use(remarkParse).use(remarkRehype).use(rehype
 const outToInProcessor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
 
 export function createSource(initalValue: string): Source {
-
     const ast = inToOutProcessor.runSync(inToOutProcessor.parse(initalValue));
     const out = String(inToOutProcessor.stringify(ast));
     const plain = String(unified().use(plainTextStringify).stringify(ast));
