@@ -9,7 +9,7 @@
             "title": "Hi, welcome!",
             "subtitle": "Lets get started",
             "edit": "Start editing",
-            "instructions": "Read the instructions",
+            "instructions": "Read the **instructions**",
             "about": "Abut this app"
         },
         "edit": {

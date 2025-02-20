@@ -9,8 +9,9 @@ import { HttpHeader } from "@solidjs/start";
 import { FaSolidPalette } from "solid-icons/fa";
 import { LocalePicker } from "~/features/i18n";
 import { ColorScheme, ColorSchemePicker, getState, useTheme } from "~/features/theme";
-import css from "./editor.module.css";
 import { Dropdown } from "~/components/dropdown";
+import { ErrorComp } from "~/components/error";
+import css from "./editor.module.css";
 
 const event = getRequestEvent();
 
@@ -98,20 +99,6 @@ export default function Editor(props: ParentProps) {
         <CommandPalette api={setCommandPalette} />
     </MenuProvider>
 }
-
-const ErrorComp: Component<{ error: Error }> = (props) => {
-    return <div class={css.error}>
-        <b>{props.error.message}</b>
-
-        <Show when={props.error.cause}>{
-            cause => <>{cause().description}</>
-        }</Show>
-
-        {props.error.stack}
-
-        <a href="/">Return to start</a>
-    </div>;
-};
 
 let keyCounter = 0;
 const createUniqueId = () => `key-${keyCounter++}`;

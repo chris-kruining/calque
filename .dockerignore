@@ -1,0 +1,17 @@
+# Hidden files
+.coverage
+.github
+.git
+.gitignore
+.vscode
+
+# Folders
+examples
+node_modules
+infrastructure
+docs
+
+# Files
+GitVersion.yml
+README.md
+renovate.json

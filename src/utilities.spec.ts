@@ -1,20 +1,9 @@
-import { describe, beforeEach, it, expect, afterAll, spyOn } from 'bun:test';
+import { describe, expect, vi } from 'vitest';
 import { decode, deepCopy, deepDiff, filter, gen__split_by_filter, map, MutarionKind, split_by_filter, splitAt } from './utilities';
-import { install } from '@sinonjs/fake-timers';
+import { it } from '~/test-helpers';
 
-type MilliSeconds = number;
-const useFakeTimers = () => {
-    const clock = install();
+const { spyOn } = vi;
 
-    beforeEach(() => clock.reset());
-    afterAll(() => clock.uninstall());
-
-    return {
-        tick(timeToAdvance: MilliSeconds) {
-            clock.tick(timeToAdvance);
-        },
-    };
-};
 const first = <T>(iterable: Iterable<T>): T | undefined => {
     for (const value of iterable) {
         return value;
@@ -123,10 +112,70 @@ describe('utilities', () => {
             expect(actual).toBe(expected);
         });
 
+        it('should decode \\b characters', async () => {
+            // Arrange
+            const given = 'this is\\ba string';
+            const expected = 'this is\ba string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
         it('should decode \\n characters', async () => {
             // Arrange
             const given = 'this is\\na string';
             const expected = 'this is\na string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('should decode \\r characters', async () => {
+            // Arrange
+            const given = 'this is\\ra string';
+            const expected = 'this is\ra string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('should decode \\f characters', async () => {
+            // Arrange
+            const given = 'this is\\fa string';
+            const expected = 'this is\fa string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('should decode \' characters', async () => {
+            // Arrange
+            const given = 'this is\\\'a string';
+            const expected = 'this is\'a string';
+
+            // Act
+            const actual = decode(given);
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('should decode \" characters', async () => {
+            // Arrange
+            const given = 'this is\"a string';
+            const expected = 'this is"a string';
 
             // Act
             const actual = decode(given);
@@ -298,10 +347,34 @@ describe('utilities', () => {
             expect(actual).toEqual({ kind: MutarionKind.Create, key: 'key', value: 'value' });
         });
 
+        it('should yield a mutation of type create when `b` contains a value that `a` does not', async () => {
+            // arrange
+            const a = { key: null };
+            const b = { key: 'value' };
+
+            // Act
+            const actual = first(deepDiff(a, b));
+
+            // Arrange 
+            expect(actual).toEqual({ kind: MutarionKind.Create, key: 'key', value: 'value' });
+        });
+
         it('should yield a mutation of type delete when `a` contains a key that `b` does not', async () => {
             // arrange
             const a = { key: 'value' };
             const b = {};
+
+            // Act
+            const actual = first(deepDiff(a, b));
+
+            // Arrange 
+            expect(actual).toEqual({ kind: MutarionKind.Delete, key: 'key', original: 'value' });
+        });
+
+        it('should yield a mutation of type delete when `a` contains a key that `b` does not', async () => {
+            // arrange
+            const a = { key: 'value' };
+            const b = { key: undefined };
 
             // Act
             const actual = first(deepDiff(a, b));

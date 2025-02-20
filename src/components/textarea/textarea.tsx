@@ -1,9 +1,9 @@
-import { Component, createContext, createEffect, createMemo, createSignal, For, onMount, untrack, useContext } from 'solid-js';
+import { Component, createEffect, createMemo, createSignal, For, onMount, untrack } from 'solid-js';
 import { debounce } from '@solid-primitives/scheduled';
-import { createSelection } from '@solid-primitives/selection';
+import { createSelection, getTextNodes } from '@solid-primitives/selection';
 import { createSource } from '~/features/source';
-import css from './textarea.module.css';
 import { isServer } from 'solid-js/web';
+import css from './textarea.module.css';
 
 interface TextareaProps {
     class?: string;
@@ -30,7 +30,7 @@ export function Textarea(props: TextareaProps) {
     });
 
     const mutate = debounce(() => {
-        const [el, start, end] = selection();
+        const [, start, end] = selection();
         const ref = editorRef();
 
         if (ref) {
@@ -51,8 +51,21 @@ export function Textarea(props: TextareaProps) {
         });
     });
 
+    createEffect(() => {
+        createHighlights(editorRef()!, 'spelling-error', source.spellingErrors);
+    });
+
+    createEffect(() => {
+        createHighlights(editorRef()!, 'grammar-error', source.grammarErrors);
+    });
+
+    createEffect(() => {
+        createHighlights(editorRef()!, 'search-results', source.queryResults);
+    });
+
     return <>
         <Suggestions />
+        <input class={css.search} type="search" oninput={e => source.query = e.target.value} />
         <div
             ref={setEditorRef}
             class={`${css.textarea} ${props.class}`}
@@ -140,3 +153,51 @@ const findMarkerNode = (node: Node | null) => {
 
     return node;
 };
+
+const spellChecker = checker(/\w+/gi);
+const grammarChecker = checker(/\w+\s+\w+/gi);
+
+function checker(regex: RegExp) {
+    return (subject: string, lang: string): [number, number][] => {
+        // return [];
+
+        const threshold = .75//.99;
+
+        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= threshold).map(({ 0: match, index }) => {
+            return [index, index + match.length] as const;
+        });
+    }
+}
+
+const createHighlights = (node: Node, type: string, ranges: [number, number][]) => {
+    queueMicrotask(() => {
+        const nodes = getTextNodes(node);
+
+        CSS.highlights.set(type, new Highlight(...ranges.map(([start, end]) => indicesToRange(start, end, nodes))));
+    });
+};
+
+const indicesToRange = (start: number, end: number, textNodes: Node[]) => {
+    const [startNode, startPos] = getRangeArgs(start, textNodes);
+    const [endNode, endPos] = start === end ? [startNode, startPos] : getRangeArgs(end, textNodes);
+
+    const range = new Range();
+
+    if (startNode && endNode && startPos !== -1 && endPos !== -1) {
+        range.setStart(startNode, startPos);
+        range.setEnd(endNode, endPos);
+    }
+
+    return range;
+}
+
+const getRangeArgs = (offset: number, texts: Node[]): [node: Node | null, offset: number] =>
+    texts.reduce(
+        ([node, pos], text) =>
+            node
+                ? [node, pos]
+                : pos <= (text as Text).data.length
+                    ? [text, pos]
+                    : [null, pos - (text as Text).data.length],
+        [null, offset] as [node: Node | null, pos: number],
+    );
