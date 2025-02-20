@@ -37,16 +37,12 @@ const inToOutProcessor = unified().use(remarkParse).use(remarkRehype).use(rehype
 const outToInProcessor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
 
 export function createSource(initalValue: string): Source {
-    const [store, setStore] = createStore<SourceStore>({ in: initalValue, out: '', plain: '', query: '', metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
 
-    onMount(() => {
-        const ast = inToOutProcessor.runSync(inToOutProcessor.parse(initalValue));
+    const ast = inToOutProcessor.runSync(inToOutProcessor.parse(initalValue));
+    const out = String(inToOutProcessor.stringify(ast));
+    const plain = String(unified().use(plainTextStringify).stringify(ast));
 
-        setStore({
-            out: String(inToOutProcessor.stringify(ast)),
-            plain: String(unified().use(plainTextStringify).stringify(ast)),
-        });
-    });
+    const [store, setStore] = createStore<SourceStore>({ in: initalValue, out, plain, query: '', metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
 
     createEffect(() => {
         const value = store.plain;

@@ -54,6 +54,7 @@ describe('dataset', () => {
         });
 
         it('update if the source value changes', () => {
+            // Arrange
             const [data, setData] = createSignal([
                 { id: '1', name: 'a first name', amount: 30 },
                 { id: '2', name: 'a second name', amount: 20 },
@@ -61,28 +62,25 @@ describe('dataset', () => {
             ]);
             const dataset = createDataSet(data);
 
-            dataset.mutateEach(item => ({ ...item, amount: item.amount * 2 }))
+            dataset.mutateEach(item => ({ ...item, amount: item.amount * 2 }));
 
+            // Act
+            setData([
+                { id: '4', name: 'a first name', amount: 30 },
+                { id: '5', name: 'a second name', amount: 20 },
+                { id: '6', name: 'a third name', amount: 10 },
+            ]);
+
+            // Assert
             return testEffect(done =>
-                createEffect((run: number = 0) => {
-                    data();
+                createEffect(() => {
+                    expect(dataset.value).toEqual([
+                        { id: '4', name: 'a first name', amount: 60 },
+                        { id: '5', name: 'a second name', amount: 40 },
+                        { id: '6', name: 'a third name', amount: 20 },
+                    ])
 
-                    if (run === 0) {
-                        setData([
-                            { id: '4', name: 'a first name', amount: 30 },
-                            { id: '5', name: 'a second name', amount: 20 },
-                            { id: '6', name: 'a third name', amount: 10 },
-                        ]);
-                    } else if (run === 1) {
-                        expect(dataset.value).toEqual([
-                            { id: '4', name: 'a first name', amount: 60 },
-                            { id: '5', name: 'a second name', amount: 40 },
-                            { id: '6', name: 'a third name', amount: 20 },
-                        ])
-
-                        done()
-                    }
-                    return run + 1
+                    done()
                 })
             );
         });
