@@ -1,29 +1,59 @@
-import { onMount } from "solid-js";
+import { createEffect, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
-import { unified, Transformer } from 'unified'
-import { Node, Text, Element } from 'hast'
+import { unified } from 'unified'
+import { Text, Root } from 'hast'
 import { visit } from "unist-util-visit";
+import { decode } from "~/utilities";
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import remarkStringify from 'remark-stringify'
-import rehypeParse from 'rehype-dom-parse'
+import rehypeParse from 'rehype-parse'
 import rehypeRemark from 'rehype-remark'
-import rehypeStringify from 'rehype-dom-stringify'
+import rehypeStringify from 'rehype-stringify'
+
+interface SourceStore {
+    in: string;
+    out: string;
+    plain: string;
+    query: string;
+    metadata: {
+        spellingErrors: [number, number][];
+        grammarErrors: [number, number][];
+        queryResults: [number, number][];
+    };
+}
 
 export interface Source {
     in: string;
     out: string;
+    query: string;
+    readonly spellingErrors: [number, number][];
+    readonly grammarErrors: [number, number][];
+    readonly queryResults: [number, number][];
 }
 
 // TODO :: make this configurable, right now we can only do markdown <--> html.
-const inToOutProcessor = unified().use(remarkParse).use(remarkRehype).use(addErrors).use(rehypeStringify);
-const outToInProcessor = unified().use(rehypeParse).use(clearErrors).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
+const inToOutProcessor = unified().use(remarkParse).use(remarkRehype).use(rehypeStringify);
+const outToInProcessor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
 
 export function createSource(initalValue: string): Source {
-    const [store, setStore] = createStore({ in: initalValue, out: '' });
+    const ast = inToOutProcessor.runSync(inToOutProcessor.parse(initalValue));
+    const out = String(inToOutProcessor.stringify(ast));
+    const plain = String(unified().use(plainTextStringify).stringify(ast));
 
-    onMount(() => {
-        setStore('out', String(inToOutProcessor.processSync(initalValue)));
+    const [store, setStore] = createStore<SourceStore>({ in: initalValue, out, plain, query: '', metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
+
+    createEffect(() => {
+        const value = store.plain;
+
+        setStore('metadata', {
+            spellingErrors: spellChecker(value, ''),
+            grammarErrors: grammarChecker(value, ''),
+        });
+    });
+
+    createEffect(() => {
+        setStore('metadata', 'queryResults', findMatches(store.plain, store.query).toArray());
     });
 
     return {
@@ -31,9 +61,12 @@ export function createSource(initalValue: string): Source {
             return store.in;
         },
         set in(next) {
+            const ast = inToOutProcessor.runSync(inToOutProcessor.parse(next));
+
             setStore({
                 in: next,
-                out: String(inToOutProcessor.processSync(next)),
+                out: String(inToOutProcessor.stringify(ast)),
+                plain: String(unified().use(plainTextStringify).stringify(ast)),
             });
         },
 
@@ -41,84 +74,67 @@ export function createSource(initalValue: string): Source {
             return store.out;
         },
         set out(next) {
+            const ast = outToInProcessor.parse(next);
+
             setStore({
-                in: String(outToInProcessor.processSync(next)).trim(),
+                in: String(outToInProcessor.stringify(outToInProcessor.runSync(ast))).trim(),
                 out: next,
+                plain: String(unified().use(plainTextStringify).stringify(ast)),
             });
+        },
+
+        get query() {
+            return store.query;
+        },
+        set query(next) {
+            setStore('query', next)
+        },
+
+        get spellingErrors() {
+            return store.metadata.spellingErrors;
+        },
+
+        get grammarErrors() {
+            return store.metadata.grammarErrors;
+        },
+
+        get queryResults() {
+            return store.metadata.queryResults;
         },
     };
 }
 
-const isMarker = (node: Node) => node.type === 'element' && Object.hasOwn((node as Element).properties, 'dataMarker')
+function plainTextStringify() {
+    this.compiler = function (tree: Root) {
+        const nodes: string[] = [];
 
-function addErrors(): Transformer {
-    const wrapInMarker = (text: Text, type: string): Element => ({
-        type: 'element',
-        tagName: 'span',
-        properties: {
-            dataMarker: type,
-        },
-        children: [
-            text
-        ]
-    });
-
-    return function (tree) {
-        visit(tree, n => n.type === 'text', (n, i, p: Element) => {
-            if (typeof i !== 'number' || p === undefined) {
-                return;
-            }
-
-            if (isMarker(p)) {
-                return;
-            }
-
-            const errors = grammarChecker(n.value, 'en-GB');
-
-            if (errors.length === 0) {
-                return;
-            }
-
-            p.children.splice(i, 1, ...errors.map(([isHit, value]) => {
-                const textNode: Text = { type: 'text', value };
-
-                return isHit ? wrapInMarker(textNode, 'grammar') : textNode;
-            }))
+        visit(tree, n => n.type === 'text', (n) => {
+            nodes.push((n as Text).value);
         });
 
-        visit(tree, n => n.type === 'text', (n, i, p: Element) => {
-            if (typeof i !== 'number' || p === undefined) {
-                return;
-            }
-
-            if (isMarker(p)) {
-                return;
-            }
-
-            const errors = spellChecker(n.value, 'en-GB');
-
-            if (errors.length === 0) {
-                return;
-            }
-
-            p.children.splice(i, 1, ...errors.map(([isHit, value]) => {
-                const textNode: Text = { type: 'text', value };
-
-                return isHit ? wrapInMarker(textNode, 'spelling') : textNode;
-            }))
-        });
-    }
+        return decode(nodes.join(''));
+    };
 }
 
-function clearErrors(): Transformer {
-    return function (tree) {
-        visit(tree, isMarker, (n, i, p: Element) => {
-            if (typeof i !== 'number' || p === undefined) {
-                return;
-            }
+function* findMatches(text: string, query: string): Generator<[number, number], void, unknown> {
+    if (query.length < 1) {
+        return;
+    }
 
-            p.children.splice(i, 1, ...(n as Element).children);
-        })
+    let startIndex = 0;
+
+    while (startIndex < text.length) {
+        const index = text.indexOf(query, startIndex);
+
+        if (index === -1) {
+            break;
+        }
+
+        const end = index + query.length;
+
+        yield [index, end];
+
+        startIndex = end;
     }
 }
 
@@ -126,22 +142,13 @@ const spellChecker = checker(/\w+/gi);
 const grammarChecker = checker(/\w+\s+\w+/gi);
 
 function checker(regex: RegExp) {
-    return (subject: string, lang: string): (readonly [boolean, string])[] => {
+    return (subject: string, lang: string): [number, number][] => {
         return [];
 
-        let lastIndex = 0;
         const threshold = .75//.99;
 
-        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= threshold).flatMap<readonly [boolean, string]>(({ 0: match, index }) => {
-            const end = index + match.length;
-            const result = [
-                [false, subject.slice(lastIndex, index)],
-                [true, subject.slice(index, end)],
-            ] as const;
-
-            lastIndex = end;
-
-            return result;
-        }).concat([[false, subject.slice(lastIndex, subject.length)]]);
+        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= threshold).map(({ 0: match, index }) => {
+            return [index, index + match.length] as const;
+        });
     }
 }

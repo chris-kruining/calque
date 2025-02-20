@@ -10,13 +10,23 @@
     unicode-bidi: plaintext;
     cursor: text;
 
-    & [data-marker="spelling"] {
+    & ::highlight(search-results) {
+        background-color: var(--secondary-900);
+    }
+
+    & ::highlight(spelling-error) {
         text-decoration-line: spelling-error;
     }
 
-    & [data-marker="grammar"] {
+    & ::highlight(grammar-error) {
         text-decoration-line: grammar-error;
     }
+}
+
+.search {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 0;
 }
 
 .suggestions {

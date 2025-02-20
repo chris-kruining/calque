@@ -1,6 +1,10 @@
-import { describe, expect, it } from "bun:test";
+// import { describe, expect, it } from "bun:test";
+import "@testing-library/jest-dom/vitest";
 import { createDataSet } from "./index";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
+import { testEffect, } from "@solidjs/testing-library";
+import { describe, expect } from "vitest";
+import { it } from '~/test-helpers';
 
 interface DataEntry {
     id: string;
@@ -47,6 +51,38 @@ describe('dataset', () => {
 
             // Assert
             expect(actual).toEqual(expect.objectContaining({ value: defaultData() }))
+        });
+
+        it('update if the source value changes', () => {
+            // Arrange
+            const [data, setData] = createSignal([
+                { id: '1', name: 'a first name', amount: 30 },
+                { id: '2', name: 'a second name', amount: 20 },
+                { id: '3', name: 'a third name', amount: 10 },
+            ]);
+            const dataset = createDataSet(data);
+
+            dataset.mutateEach(item => ({ ...item, amount: item.amount * 2 }));
+
+            // Act
+            setData([
+                { id: '4', name: 'a first name', amount: 30 },
+                { id: '5', name: 'a second name', amount: 20 },
+                { id: '6', name: 'a third name', amount: 10 },
+            ]);
+
+            // Assert
+            return testEffect(done =>
+                createEffect(() => {
+                    expect(dataset.value).toEqual([
+                        { id: '4', name: 'a first name', amount: 60 },
+                        { id: '5', name: 'a second name', amount: 40 },
+                        { id: '6', name: 'a third name', amount: 20 },
+                    ])
+
+                    done()
+                })
+            );
         });
 
         describe('mutate', () => {

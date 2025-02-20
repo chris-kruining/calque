@@ -1,8 +1,9 @@
 
-import { ParentProps } from "solid-js";
+import { ErrorBoundary, ParentProps } from "solid-js";
 import { Menu } from "~/features/menu";
 import { createCommand } from "~/features/command";
 import { useNavigate } from "@solidjs/router";
+import { ErrorComp } from "~/components/error";
 
 export default function Experimental(props: ParentProps) {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ export default function Experimental(props: ParentProps) {
       <Menu.Item command={goTo.withLabel('formatter').with('formatter')} />
     </Menu.Root>
 
-    {props.children}
+    <ErrorBoundary fallback={e => <ErrorComp error={e} />}>
+      {props.children}
+    </ErrorBoundary>
   </>;
 }

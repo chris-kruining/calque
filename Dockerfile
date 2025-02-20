@@ -1,4 +1,4 @@
-FROM oven/bun:1 AS base
+FROM docker.io/imbios/bun-node:latest-23-alpine AS base
 WORKDIR /usr/src/app
 
 FROM base AS install
@@ -17,9 +17,9 @@ RUN echo "SESSION_SECRET=$(head -c 64 /dev/random | base64)" > .env
 
 ENV NODE_ENV=production
 ENV SERVER_PRESET=bun
-RUN bun test
 RUN chmod +x node_modules/.bin/*
-RUN bun run build
+RUN bun run test:ci
+RUN bun --bun run build
 
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
@@ -31,4 +31,4 @@ COPY --from=prerelease /usr/src/app/.output .output
 
 USER bun
 EXPOSE 3000
-ENTRYPOINT [ "bun", "run", "start" ]
+ENTRYPOINT [ "bun", "--bun", "run", "start" ]

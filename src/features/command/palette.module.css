@@ -36,8 +36,8 @@
             background-color: color(from var(--info) xyz x y z / .5);
         }
 
-        & b {
-            color: var(--text-1);
+        & ::highlight(command-pelette-query) {
+            background-color: var(--secondary-900);
         }
     }
 }

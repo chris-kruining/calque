@@ -27,8 +27,11 @@ export function split_by_filter(subject: string, filter: string): (readonly [boo
     return Array.from<readonly [boolean, string]>(gen__split_by_filter(subject, filter));
 }
 
+type Hex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 'a' | 'b' | 'c' | 'd' | 'e' | 'f';
+type EncodedChar = 't' | 'b' | 'n' | 'r' | 'f' | '\'' | '"' | `u${Hex}${Hex | ''}${Hex | ''}${Hex | ''}`
+
 const decodeRegex = /(?<!\\)\\(t|b|n|r|f|'|"|u[0-9a-f]{1,4})/gi;
-const decodeReplacer = (_: any, char: string) => ({
+const decodeReplacer = (_: any, char: EncodedChar) => ({
     t: '\t',
     b: '\b',
     n: '\n',
@@ -37,7 +40,7 @@ const decodeReplacer = (_: any, char: string) => ({
     "'": '\'',
     '"': '\"',
     u: String.fromCharCode(Number.parseInt(`0x${char.slice(1)}`)),
-}[char.charAt(0)] ?? '');
+}[char.charAt(0) as ('t' | 'b' | 'n' | 'r' | 'f' | '\'' | '"' | 'u')]);
 export const decode = (subject: string): string => subject.replace(decodeRegex, decodeReplacer);
 
 export const deepCopy = <T>(original: T): T => {
@@ -110,8 +113,13 @@ export function* deepDiff<T1 extends object, T2 extends object>(a: T1, b: T2, pa
         const key = path.concat(keyA!.toString()).join('.');
 
         yield ((): Mutation => {
-            if (valueA === null || valueA === undefined) return { key, kind: MutarionKind.Create, value: valueB };
-            if (valueB === null || valueB === undefined) return { key, kind: MutarionKind.Delete, original: valueA };
+            if (valueA === null || valueA === undefined) {
+                return { key, kind: MutarionKind.Create, value: valueB };
+            }
+
+            if (valueB === null || valueB === undefined) {
+                return { key, kind: MutarionKind.Delete, original: valueA };
+            }
 
             return { key, kind: MutarionKind.Update, value: valueB, original: valueA };
         })();
@@ -200,7 +208,7 @@ const bufferredIterator = <T extends readonly [string | number, any]>(subject: I
 
     const next = () => {
         const res = iterator.next();
-        done = res.done ?? false;
+        done = res.done!;
 
         if (!done) {
             buffer.push(res.value);
