@@ -1,13 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import solidPlugin from 'vite-plugin-solid';
-import { resolve } from 'path'
-import type { Plugin } from 'vite';
+import { resolve } from 'node:path'
 import { CoverageReporter, CoverageV8Options } from 'vitest/node';
+import type { Plugin } from 'vite';
 
 export default defineConfig({
     plugins: [
         solidPlugin(),
-        reportWith('lcov', 'text')
+        reportWith('lcov', 'text'),
     ],
     resolve: {
         conditions: ['development', 'browser'],
@@ -17,6 +17,13 @@ export default defineConfig({
     },
     test: {
         environment: 'jsdom',
+        deps: {
+            optimizer: {
+                web: {
+                    enabled: true,
+                }
+            }
+        },
         coverage: {
             provider: 'istanbul',
             reportsDirectory: './.coverage',

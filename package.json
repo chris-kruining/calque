@@ -47,6 +47,7 @@
     "bun-types": "^1.2.2",
     "jsdom": "^26.0.0",
     "solid-devtools": "^0.33.0",
+    "vite-plugin-solid": "^2.11.2",
     "vite-plugin-solid-svg": "^0.8.1",
     "vitest": "^3.0.6",
     "workbox-window": "^7.3.0"
@@ -56,7 +57,7 @@
     "build": "vinxi build",
     "start": "vinxi start",
     "version": "vinxi version",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage"
+    "test": "vitest --coverage",
+    "test:ci": "vitest run"
   }
 }

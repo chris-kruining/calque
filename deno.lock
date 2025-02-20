@@ -41,6 +41,7 @@
     "npm:unist-util-visit@5": "5.0.0",
     "npm:vinxi@~0.5.3": "0.5.3_@babel+core@7.26.9",
     "npm:vite-plugin-solid-svg@~0.8.1": "0.8.1_solid-js@1.9.4__seroval@1.2.1_vite@6.1.0",
+    "npm:vite-plugin-solid@^2.11.2": "2.11.2_@testing-library+jest-dom@6.6.3_solid-js@1.9.4__seroval@1.2.1_vite@6.1.0_@babel+core@7.26.9",
     "npm:vitest@^3.0.6": "3.0.6_jsdom@26.0.0_vite@6.1.0",
     "npm:workbox-window@^7.3.0": "7.3.0"
   },
@@ -1017,7 +1018,7 @@
         "terracotta",
         "tinyglobby",
         "vinxi",
-        "vite-plugin-solid"
+        "vite-plugin-solid@2.11.1_@testing-library+jest-dom@6.6.3_solid-js@1.9.4__seroval@1.2.1_vite@6.1.0_@babel+core@7.26.9"
       ]
     },
     "@solidjs/testing-library@0.8.10_@solidjs+router@0.15.3__solid-js@1.9.4___seroval@1.2.1_solid-js@1.9.4__seroval@1.2.1": {
@@ -4573,6 +4574,20 @@
         "vitefu"
       ]
     },
+    "vite-plugin-solid@2.11.2_@testing-library+jest-dom@6.6.3_solid-js@1.9.4__seroval@1.2.1_vite@6.1.0_@babel+core@7.26.9": {
+      "integrity": "sha512-/OXVasW5OIRSFXnqzMgm8X3hPvf+JTbGecjQhmk7QnbDFq4hqdLssuYAWw9GsJGfzUPiMHM3ME2Y2XHPsTWmkw==",
+      "dependencies": [
+        "@babel/core",
+        "@testing-library/jest-dom",
+        "@types/babel__core",
+        "babel-preset-solid",
+        "merge-anything",
+        "solid-js",
+        "solid-refresh",
+        "vite",
+        "vitefu"
+      ]
+    },
     "vite@6.1.0": {
       "integrity": "sha512-RjjMipCKVoR4hVfPY6GQTgveinjNuyLw+qruksLDvA5ktI1150VmcMBKmQaEWJhg/j6Uaf6dNCNA0AfdzUb/hQ==",
       "dependencies": [
@@ -4809,6 +4824,7 @@
         "npm:unist-util-visit@5",
         "npm:vinxi@~0.5.3",
         "npm:vite-plugin-solid-svg@~0.8.1",
+        "npm:vite-plugin-solid@^2.11.2",
         "npm:vitest@^3.0.6",
         "npm:workbox-window@^7.3.0"
       ]
