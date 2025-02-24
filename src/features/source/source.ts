@@ -1,15 +1,17 @@
-import { createEffect, onMount } from "solid-js";
+import { Accessor, createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
 import { unified } from 'unified'
-import { Text, Root } from 'hast'
 import { visit } from "unist-util-visit";
 import { decode } from "~/utilities";
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import remarkStringify from 'remark-stringify'
 import rehypeParse from 'rehype-parse'
+import rehypeDomParse from 'rehype-dom-parse'
 import rehypeRemark from 'rehype-remark'
 import rehypeStringify from 'rehype-stringify'
+import type { Text, Root } from 'hast'
+import { isServer } from "solid-js/web";
 
 interface SourceStore {
     in: string;
@@ -34,29 +36,12 @@ export interface Source {
 
 // TODO :: make this configurable, right now we can only do markdown <--> html.
 const inToOutProcessor = unified().use(remarkParse).use(remarkRehype).use(rehypeStringify);
-const outToInProcessor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
+const outToInProcessor = unified().use(isServer ? rehypeParse : rehypeDomParse).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
 
-export function createSource(initalValue: string): Source {
-    const ast = inToOutProcessor.runSync(inToOutProcessor.parse(initalValue));
-    const out = String(inToOutProcessor.stringify(ast));
-    const plain = String(unified().use(plainTextStringify).stringify(ast));
+export function createSource(value: Accessor<string>): Source {
+    const [store, setStore] = createStore<SourceStore>({ in: '', out: '', plain: '', query: '', metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
 
-    const [store, setStore] = createStore<SourceStore>({ in: initalValue, out, plain, query: '', metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
-
-    createEffect(() => {
-        const value = store.plain;
-
-        setStore('metadata', {
-            spellingErrors: spellChecker(value, ''),
-            grammarErrors: grammarChecker(value, ''),
-        });
-    });
-
-    createEffect(() => {
-        setStore('metadata', 'queryResults', findMatches(store.plain, store.query).toArray());
-    });
-
-    return {
+    const src: Source = {
         get in() {
             return store.in;
         },
@@ -102,6 +87,26 @@ export function createSource(initalValue: string): Source {
             return store.metadata.queryResults;
         },
     };
+
+    createEffect(() => {
+        src.in = value();
+    });
+    src.in = value();
+
+    createEffect(() => {
+        const value = store.plain;
+
+        setStore('metadata', {
+            spellingErrors: spellChecker(value, ''),
+            grammarErrors: grammarChecker(value, ''),
+        });
+    });
+
+    createEffect(() => {
+        setStore('metadata', 'queryResults', findMatches(store.plain, store.query).toArray());
+    });
+
+    return src;
 }
 
 function plainTextStringify() {

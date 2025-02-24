@@ -1,4 +1,4 @@
-import { Accessor, children, Component, createContext, createEffect, createMemo, createResource, createSignal, For, InitializedResource, JSX, onCleanup, ParentComponent, Setter, Show, useContext } from "solid-js";
+import { Accessor, Component, createContext, createMemo, createResource, createSignal, For, JSX, onCleanup, ParentComponent, Setter, Show, useContext } from "solid-js";
 import { AiFillFile, AiFillFolder, AiFillFolderOpen } from "solid-icons/ai";
 import { SelectionProvider, selectable } from "~/features/selectable";
 import { debounce } from "@solid-primitives/scheduled";

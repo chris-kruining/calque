@@ -1,8 +1,8 @@
-import { Component, createEffect, createMemo, createSignal, For, onMount, untrack } from 'solid-js';
-import { debounce } from '@solid-primitives/scheduled';
+import { Component, createEffect, createMemo, createSignal, For, on, untrack } from 'solid-js';
 import { createSelection, getTextNodes } from '@solid-primitives/selection';
-import { createSource } from '~/features/source';
 import { isServer } from 'solid-js/web';
+import { createEditContext } from '~/features/edit-context';
+import { createSource } from '~/features/source';
 import css from './textarea.module.css';
 
 interface TextareaProps {
@@ -16,75 +16,25 @@ interface TextareaProps {
 }
 
 export function Textarea(props: TextareaProps) {
-    const [selection, setSelection] = createSelection();
     const [editorRef, setEditorRef] = createSignal<HTMLElement>();
-
-    const source = createSource(props.value);
+    const source = createSource(() => props.value);
+    const [text] = createEditContext(editorRef, () => source.out);
 
     createEffect(() => {
         props.oninput?.(source.in);
     });
 
-    createEffect(() => {
-        source.in = props.value;
-    });
+    createEffect(on(() => [editorRef(), source.spellingErrors] as const, ([ref, errors]) => {
+        createHighlights(ref, 'spelling-error', errors);
+    }));
 
-    const mutate = debounce(() => {
-        const [, start, end] = selection();
-        const ref = editorRef();
+    createEffect(on(() => [editorRef(), source.grammarErrors] as const, ([ref, errors]) => {
+        createHighlights(ref, 'grammar-error', errors);
+    }));
 
-        if (ref) {
-            source.out = ref.innerHTML;
-
-            ref.style.height = `1px`;
-            ref.style.height = `${2 + ref.scrollHeight}px`;
-
-            setSelection([ref, start, end]);
-        }
-    }, 300);
-
-    onMount(() => {
-        const ref = editorRef()!;
-
-        console.log(EditContext);
-
-        const context = new EditContext({
-            text: source.out,
-        });
-
-        const sub = (event) => context.addEventListener(event, (e: Event) => console.log(event, e));
-
-        sub('textupdate');
-        sub('textformatupdate');
-        sub('characterboundupdate');
-
-        console.log(context);
-
-        ref.editContext = context;
-
-        const resize = () => context.updateControlBounds(ref.getBoundingClientRect());
-
-        window.addEventListener('resize', resize);
-        resize();
-
-        // new MutationObserver(mutate).observe(ref, {
-        //     subtree: true,
-        //     childList: true,
-        //     characterData: true,
-        // });
-    });
-
-    createEffect(() => {
-        createHighlights(editorRef()!, 'spelling-error', source.spellingErrors);
-    });
-
-    createEffect(() => {
-        createHighlights(editorRef()!, 'grammar-error', source.grammarErrors);
-    });
-
-    createEffect(() => {
-        createHighlights(editorRef()!, 'search-results', source.queryResults);
-    });
+    createEffect(on(() => [editorRef(), source.queryResults] as const, ([ref, errors]) => {
+        createHighlights(ref, 'search-results', errors);
+    }));
 
     return <>
         <Suggestions />
@@ -94,7 +44,7 @@ export function Textarea(props: TextareaProps) {
             class={`${css.textarea} ${props.class}`}
             dir="auto"
             lang={props.lang}
-            innerHTML={source.out}
+            innerHTML={text()}
             data-placeholder={props.placeholder ?? ''}
             on:keydown={e => e.stopPropagation()}
             on:pointerdown={e => e.stopPropagation()}
@@ -176,20 +126,7 @@ const findMarkerNode = (node: Node | null) => {
     return node;
 };
 
-const spellChecker = checker(/\w+/gi);
-const grammarChecker = checker(/\w+\s+\w+/gi);
 
-function checker(regex: RegExp) {
-    return (subject: string, lang: string): [number, number][] => {
-        // return [];
-
-        const threshold = .75//.99;
-
-        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= threshold).map(({ 0: match, index }) => {
-            return [index, index + match.length] as const;
-        });
-    }
-}
 
 const createHighlights = (node: Node, type: string, ranges: [number, number][]) => {
     queueMicrotask(() => {

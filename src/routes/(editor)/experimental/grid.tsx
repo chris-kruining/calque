@@ -1,7 +1,7 @@
 import { Sidebar } from '~/components/sidebar';
 import { CellEditor, Column, DataSetGroupNode, DataSetNode, DataSetRowNode, Grid, GridApi } from '~/components/grid';
 import { people, Person } from './experimental.data';
-import { Component, createEffect, createMemo, createSignal, For, Match, Switch } from 'solid-js';
+import { Component, createEffect, createMemo, createSignal, For } from 'solid-js';
 import { MutarionKind, Mutation } from '~/utilities';
 import { Table } from '~/components/table';
 import { createDataSet } from '~/features/dataset';
