@@ -113,6 +113,26 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         },
     });
 
+    DocumentEventListener({
+        onSelectionchange(e) {
+            const selection = document.getSelection();
+
+            if (selection === null) {
+                return;
+            }
+
+            if (selection.rangeCount === 0) {
+                return;
+            }
+
+            if (document.activeElement !== ref()) {
+                return;
+            }
+
+            updateSelection(selection.getRangeAt(0)!);
+        },
+    });
+
     createEventListenerMap(() => ref()!, {
         keydown(e: KeyboardEvent) {
             // keyCode === 229 is a special code that indicates an IME event.
@@ -131,26 +151,6 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
             } else if (e.key === 'Enter') {
                 updateText(start, end, '\n');
             }
-        },
-    });
-
-    DocumentEventListener({
-        onSelectionchange(e) {
-            const selection = document.getSelection();
-
-            if (selection === null) {
-                return;
-            }
-
-            if (selection.rangeCount === 0) {
-                return;
-            }
-
-            if (document.activeElement !== ref()) {
-                return;
-            }
-
-            updateSelection(selection.getRangeAt(0)!);
         },
     });
 
