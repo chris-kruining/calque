@@ -28,7 +28,7 @@ export default defineConfig({
             provider: 'istanbul',
             reportsDirectory: './.coverage',
             all: false,
-        },
+        }
     },
 });
 
@@ -39,6 +39,12 @@ function reportWith(...reporter: CoverageReporter[]): Plugin {
         config(userConf, env) {
             if (userConf.test) {
                 userConf.test.coverage = { ...userConf.test.coverage, reporter } as CoverageV8Options;
+                userConf.test.browser = {
+                    provider: 'playwright',
+                    enabled: true,
+                    headless: true,
+                    instances: [{ browser: 'chromium' }]
+                };
             }
         },
     }

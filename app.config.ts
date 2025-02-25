@@ -1,6 +1,7 @@
 import { defineConfig } from '@solidjs/start/config';
 import solidSvg from 'vite-plugin-solid-svg';
 import devtools from 'solid-devtools/vite';
+import { resolve } from 'node:path';
 
 export default defineConfig({
     vite: {

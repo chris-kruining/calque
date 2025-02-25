@@ -1,12 +1,13 @@
 import { Component, createEffect, createMemo, createSignal, For, on, untrack } from 'solid-js';
 import { createSelection, getTextNodes } from '@solid-primitives/selection';
 import { isServer } from 'solid-js/web';
-import { createEditContext } from '~/features/edit-context';
+import { createEditContext } from '~/features/editor';
 import { createSource } from '~/features/source';
 import css from './textarea.module.css';
 
 interface TextareaProps {
     class?: string;
+    title?: string;
     value: string;
     lang: string;
     placeholder?: string;
@@ -21,27 +22,32 @@ export function Textarea(props: TextareaProps) {
     const [text] = createEditContext(editorRef, () => source.out);
 
     createEffect(() => {
+        source.out = text();
+    });
+
+    createEffect(() => {
         props.oninput?.(source.in);
     });
 
-    createEffect(on(() => [editorRef(), source.spellingErrors] as const, ([ref, errors]) => {
+    createEffect(on(() => [editorRef()!, source.spellingErrors] as const, ([ref, errors]) => {
         createHighlights(ref, 'spelling-error', errors);
     }));
 
-    createEffect(on(() => [editorRef(), source.grammarErrors] as const, ([ref, errors]) => {
+    createEffect(on(() => [editorRef()!, source.grammarErrors] as const, ([ref, errors]) => {
         createHighlights(ref, 'grammar-error', errors);
     }));
 
-    createEffect(on(() => [editorRef(), source.queryResults] as const, ([ref, errors]) => {
+    createEffect(on(() => [editorRef()!, source.queryResults] as const, ([ref, errors]) => {
         createHighlights(ref, 'search-results', errors);
     }));
 
     return <>
         <Suggestions />
-        <input class={css.search} type="search" oninput={e => source.query = e.target.value} />
+        <input class={css.search} type="search" title={`${props.title ?? ''}-search`} oninput={e => source.query = e.target.value} />
         <div
             ref={setEditorRef}
             class={`${css.textarea} ${props.class}`}
+            title={props.title ?? ''}
             dir="auto"
             lang={props.lang}
             innerHTML={text()}

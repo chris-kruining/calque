@@ -1,3 +1,6 @@
+export const splice = (subject: string, start: number, end: number, replacement: string) => {
+    return `${subject.slice(0, start)}${replacement}${Object.is(end, -0) ? '' : subject.slice(end)}`;
+};
 export const splitAt = (subject: string, index: number): readonly [string, string] => {
     if (index < 0) {
         return [subject, ''];

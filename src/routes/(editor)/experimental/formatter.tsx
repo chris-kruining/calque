@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
 import { Textarea } from "~/components/textarea";
 import css from './formatter.module.css';
+import { Editor } from "~/features/editor";
 
 const tempVal = `
 # Header
@@ -37,7 +38,7 @@ export default function Formatter(props: {}) {
     }, 300);
 
     return <div class={css.root}>
-        <textarea oninput={onInput}>{value()}</textarea>
-        <Textarea class={css.textarea} value={value()} oninput={setValue} lang="en-GB" />
+        <textarea oninput={onInput} title="markdown">{value()}</textarea>
+        <Textarea class={css.textarea} title="html" value={value()} oninput={setValue} lang="en-GB" />
     </div>;
 }

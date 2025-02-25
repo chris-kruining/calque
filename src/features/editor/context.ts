@@ -1,18 +1,17 @@
 import { createEventListenerMap, DocumentEventListener, WindowEventListener } from "@solid-primitives/event-listener";
-import { Accessor, createEffect, createMemo, onMount } from "solid-js";
+import { Accessor, createEffect, createMemo, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { isServer } from "solid-js/web";
-import { createSelection, getTextNodes } from "@solid-primitives/selection";
-import { visit } from "unist-util-visit";
-import type { Root, Text } from 'hast';
 import { unified } from "unified";
+import { createMap } from './map';
+import { splice } from "~/utilities";
 import rehypeParse from "rehype-parse";
 
-type EditContext = [Accessor<string>];
+type Editor = [Accessor<string>];
 
-export function createEditContext(ref: Accessor<HTMLElement | undefined>, value: Accessor<string>): EditContext {
+export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
     if (isServer) {
-        return [createMemo(() => value())];
+        return [value];
     }
 
     if (!("EditContext" in window)) {
@@ -34,51 +33,15 @@ export function createEditContext(ref: Accessor<HTMLElement | undefined>, value:
     });
 
     const ast = createMemo(() => unified().use(rehypeParse).parse(store.text));
-    const indices = createMemo(() => {
-        const root = ref();
-
-        if (!root) {
-            return [];
-        }
-
-        const nodes = getTextNodes(root);
-        const indices: { node: Node, text: { start: number, end: number }, html: { start: number, end: number } }[] = [];
-
-        let index = 0;
-        visit(ast(), n => n.type === 'text', (node) => {
-            const { position, value } = node as Text;
-            const end = index + value.length;
-
-            if (position) {
-                indices.push({ node: nodes.shift()!, text: { start: index, end }, html: { start: position.start.offset!, end: position.end.offset! } });
-            }
-
-            index = end;
-        });
-
-        return indices;
-    });
-    const [selection, setSelection] = createSelection();
-
-    createEffect(() => {
-        console.log(indices());
-    });
+    const indexMap = createMap(() => ref()!, ast);
 
     createEventListenerMap<any>(context, {
         textupdate(e: TextUpdateEvent) {
-            const { updateRangeStart: start, updateRangeEnd: end } = e;
+            const { updateRangeStart: start, updateRangeEnd: end, text } = e;
 
-            setStore('text', `${store.text.slice(0, start)}${e.text}${store.text.slice(end)}`);
+            setStore('text', `${store.text.slice(0, start)}${text}${store.text.slice(end)}`);
 
-            updateSelection(toRange(ref()!, start, end));
-
-            setTimeout(() => {
-                console.log('hmmm', e, start, end);
-                context.updateSelection(start, end);
-
-
-                setSelection([ref()!, start, end]);
-            }, 1000);
+            context.updateSelection(start + text.length, start + text.length);
         },
 
         compositionstart() {
@@ -102,37 +65,43 @@ export function createEditContext(ref: Accessor<HTMLElement | undefined>, value:
         },
     });
 
+    function updateText(start: number, end: number, text: string) {
+        context.updateText(start, end, text);
+
+        setStore('text', splice(store.text, start, end, text));
+
+        context.updateSelection(start + text.length, start + text.length);
+    }
+
     function updateControlBounds() {
         context.updateControlBounds(ref()!.getBoundingClientRect());
     }
 
     function updateSelection(range: Range) {
-        const [start, end] = toIndices(ref()!, range);
-
-        let index = 0;
-        let mappedStart = -1;
-        let mappedEnd = -1;
-
-        visit(ast(), n => n.type === 'text', (node) => {
-            const { position, value } = node as Text;
-
-            if (position) {
-                if (index <= start && (index + value.length) >= start) {
-                    mappedStart = position.start.offset! + range.startOffset;
-                }
-
-                if (index <= end && (index + value.length) >= end) {
-                    mappedEnd = position.start.offset! + range.endOffset;
-                }
-            }
-
-            index += value.length;
-        });
-
-        context.updateSelection(mappedStart, mappedEnd);
+        context.updateSelection(...indexMap.toHtmlIndices(range));
         context.updateSelectionBounds(range.getBoundingClientRect());
 
-        setSelection([ref()!, start, end]);
+        queueMicrotask(() => {
+            const selection = window.getSelection();
+
+            if (selection === null) {
+                return;
+            }
+
+            if (selection.rangeCount !== 0) {
+                const existingRange = selection.getRangeAt(0);
+
+                if (equals(range, existingRange)) {
+                    return;
+                }
+
+                selection.removeAllRanges();
+            }
+
+            console.log('is it me?');
+
+            selection.addRange(range);
+        });
     }
 
     WindowEventListener({
@@ -149,27 +118,28 @@ export function createEditContext(ref: Accessor<HTMLElement | undefined>, value:
                 return;
             }
 
-            const start = context.selectionStart;
-            const end = context.selectionEnd;
+            const start = Math.min(context.selectionStart, context.selectionEnd);
+            let end = Math.max(context.selectionStart, context.selectionEnd);
 
             if (e.key === 'Tab') {
                 e.preventDefault();
 
-                context.updateText(start, end, '\t');
-                // updateSelection(start + 1, start + 1);
+                updateText(start, end, '&nbsp;&nbsp;&nbsp;&nbsp;');
             } else if (e.key === 'Enter') {
-                context.updateText(start, end, '\n');
-
-                // updateSelection(start + 1, start + 1);
+                updateText(start, end, '\n');
             }
         },
     });
 
     DocumentEventListener({
         onSelectionchange(e) {
-            const selection = document.getSelection()!;
+            const selection = document.getSelection();
 
-            if (selection.rangeCount < 1) {
+            if (selection === null) {
+                return;
+            }
+
+            if (selection.rangeCount === 0) {
                 return;
             }
 
@@ -185,7 +155,7 @@ export function createEditContext(ref: Accessor<HTMLElement | undefined>, value:
         updateControlBounds();
     });
 
-    createEffect((last?: HTMLElement) => {
+    createEffect((last?: Element) => {
         if (last !== undefined) {
             last.editContext = undefined;
         }
@@ -202,14 +172,31 @@ export function createEditContext(ref: Accessor<HTMLElement | undefined>, value:
     });
 
     createEffect(() => {
-        context.updateText(0, 0, value());
+        updateText(0, -0, value());
+    });
+
+    createEffect(() => {
+        store.text;
+
+        if (document.activeElement === untrack(ref)) {
+            queueMicrotask(() => {
+                console.log();
+
+                updateSelection(indexMap.toRange(context.selectionStart, context.selectionEnd));
+            });
+        }
     });
 
     return [createMemo(() => store.text)];
 }
 
+const equals = (a: Range, b: Range): boolean => {
+    const keys: (keyof Range)[] = ['startOffset', 'endOffset', 'commonAncestorContainer', 'startContainer', 'endContainer'];
+    return keys.every(key => a[key] === b[key]);
+}
+
 declare global {
-    interface HTMLElement {
+    interface Element {
         editContext?: EditContext;
     }
 
@@ -276,49 +263,3 @@ declare global {
 
     var EditContext: EditContextConstructor;
 }
-
-const offsetOf = (node: Node, nodes: Node[]) => nodes.slice(0, nodes.indexOf(node)).reduce((t, n) => t + n.textContent!.length, 0);
-
-const toRange = (root: Node, start: number, end: number): Range => {
-    let index = 0;
-    let startNode = null;
-    let endNode = null;
-
-    for (const node of getTextNodes(root)) {
-        const length = node.textContent!.length;
-
-        if (index <= start && (index + length) >= start) {
-            startNode = [node, Math.abs(end - index)] as const;
-        }
-
-        if (index <= end && (index + length) >= end) {
-            endNode = [node, Math.abs(end - index)] as const;
-        }
-
-        if (startNode !== null && endNode !== null) {
-            break;
-        }
-
-        index += length;
-    }
-
-    const range = new Range();
-
-    if (startNode !== null) {
-        range.setStart(...startNode);
-    }
-
-    if (endNode !== null) {
-        range.setEnd(...endNode);
-    }
-
-    return range;
-};
-
-const toIndices = (node: Node, range: Range): [number, number] => {
-    const nodes = getTextNodes(node);
-    const start = offsetOf(range.startContainer, nodes) + range.startOffset;
-    const end = offsetOf(range.endContainer, nodes) + range.endOffset;
-
-    return [start, end];
-};

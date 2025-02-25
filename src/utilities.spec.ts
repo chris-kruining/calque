@@ -1,5 +1,5 @@
 import { describe, expect, vi } from 'vitest';
-import { decode, deepCopy, deepDiff, filter, gen__split_by_filter, map, MutarionKind, split_by_filter, splitAt } from './utilities';
+import { decode, deepCopy, deepDiff, filter, gen__split_by_filter, map, MutarionKind, splice, split_by_filter, splitAt } from './utilities';
 import { it } from '~/test-helpers';
 
 const { spyOn } = vi;
@@ -11,6 +11,44 @@ const first = <T>(iterable: Iterable<T>): T | undefined => {
 }
 
 describe('utilities', () => {
+    describe('splice', () => {
+        it('can replace part of string based on indices', async () => {
+            // Arrange
+            const given = 'this is a string';
+            const expected = 'this was a string';
+
+            // Act
+            const actual = splice(given, 5, 7, 'was');
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('can replace from the start', async () => {
+            // Arrange
+            const given = 'this is a string';
+            const expected = 'was a string';
+
+            // Act
+            const actual = splice(given, 0, 7, 'was');
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+
+        it('can replace till the end', async () => {
+            // Arrange
+            const given = 'this is a string';
+            const expected = 'this was';
+
+            // Act
+            const actual = splice(given, 5, -0, 'was');
+
+            // Assert
+            expect(actual).toBe(expected);
+        });
+    });
+
     describe('splitAt', () => {
         it('should split the given string at the given index', async () => {
             // Arrange
