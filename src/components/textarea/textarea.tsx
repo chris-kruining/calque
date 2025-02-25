@@ -4,6 +4,7 @@ import { isServer } from 'solid-js/web';
 import { createEditContext } from '~/features/editor';
 import { createSource } from '~/features/source';
 import css from './textarea.module.css';
+import { debounce } from '@solid-primitives/scheduled';
 
 interface TextareaProps {
     class?: string;
@@ -17,9 +18,11 @@ interface TextareaProps {
 }
 
 export function Textarea(props: TextareaProps) {
+    const [replacement, setReplacement] = createSignal('');
     const [editorRef, setEditorRef] = createSignal<HTMLElement>();
+
     const source = createSource(() => props.value);
-    const [text] = createEditContext(editorRef, () => source.out);
+    const [text, { mutate }] = createEditContext(editorRef, () => source.out);
 
     createEffect(() => {
         source.out = text();
@@ -41,9 +44,17 @@ export function Textarea(props: TextareaProps) {
         createHighlights(ref, 'search-results', errors);
     }));
 
+    const replace = () => {
+        mutate(text => text.replaceAll(source.query, replacement()));
+    };
+
     return <>
-        <Suggestions />
-        <input class={css.search} type="search" title={`${props.title ?? ''}-search`} oninput={e => source.query = e.target.value} />
+        <div class={css.search}>
+            <input type="search" title={`${props.title ?? ''}-search`} placeholder="search for" oninput={e => source.query = e.target.value} />
+            <input type="search" title={`${props.title ?? ''}-replace`} placeholder="replace with" oninput={e => setReplacement(e.target.value)} />
+            <button onclick={() => replace()}>replace</button>
+        </div>
+
         <div
             ref={setEditorRef}
             class={`${css.textarea} ${props.class}`}
@@ -57,82 +68,6 @@ export function Textarea(props: TextareaProps) {
         />
     </>;
 }
-
-const Suggestions: Component = () => {
-    const [selection] = createSelection();
-    const [suggestionRef, setSuggestionRef] = createSignal<HTMLElement>();
-    const [suggestions, setSuggestions] = createSignal<string[]>([]);
-
-    const marker = createMemo(() => {
-        if (isServer) {
-            return;
-        }
-
-        const [n] = selection();
-        const s = window.getSelection();
-
-        if (n === null || s === null || s.rangeCount < 1) {
-            return;
-        }
-
-        return (findMarkerNode(s.getRangeAt(0)?.commonAncestorContainer) ?? undefined) as HTMLElement | undefined;
-    });
-
-    createEffect<HTMLElement | undefined>((prev) => {
-        if (prev) {
-            prev.style.setProperty('anchor-name', null);
-        }
-
-        const m = marker();
-        const ref = untrack(() => suggestionRef()!);
-
-        if (m === undefined) {
-            ref.hidePopover();
-
-            return;
-        }
-
-        m.style.setProperty('anchor-name', '--suggestions');
-        ref.showPopover();
-        ref.focus()
-
-        return m;
-    });
-
-    createEffect(() => {
-        marker();
-
-        setSuggestions(Array(Math.ceil(Math.random() * 5)).fill('').map((_, i) => `suggestion ${i}`));
-    });
-
-    const onPointerDown = (e: PointerEvent) => {
-        marker()?.replaceWith(document.createTextNode(e.target.textContent));
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-        console.log(e);
-    }
-
-    return <menu ref={setSuggestionRef} class={css.suggestions} popover="manual" onkeydown={onKeyDown}>
-        <For each={suggestions()}>{
-            suggestion => <li onpointerdown={onPointerDown}>{suggestion}</li>
-        }</For>
-    </menu>;
-};
-
-const findMarkerNode = (node: Node | null) => {
-    while (node !== null) {
-        if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).hasAttribute('data-marker')) {
-            break;
-        }
-
-        node = node.parentNode;
-    }
-
-    return node;
-};
-
-
 
 const createHighlights = (node: Node, type: string, ranges: [number, number][]) => {
     queueMicrotask(() => {

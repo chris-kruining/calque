@@ -7,11 +7,14 @@ import { createMap } from './map';
 import { splice } from "~/utilities";
 import rehypeParse from "rehype-parse";
 
-type Editor = [Accessor<string>];
+type Editor = [Accessor<string>, { select(range: Range): void, mutate(setter: (text: string) => string): void }];
 
 export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
     if (isServer) {
-        return [value];
+        return [value, {
+            select(range) { },
+            mutate() { },
+        }];
     }
 
     if (!("EditContext" in window)) {
@@ -187,7 +190,17 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         }
     });
 
-    return [createMemo(() => store.text)];
+    return [
+        createMemo(() => store.text),
+        {
+            select(range: Range) {
+                updateSelection(range);
+            },
+
+            mutate(setter) {
+                setStore('text', setter);
+            },
+        }];
 }
 
 const equals = (a: Range, b: Range): boolean => {

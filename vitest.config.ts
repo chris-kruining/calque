@@ -43,6 +43,7 @@ function reportWith(...reporter: CoverageReporter[]): Plugin {
                     provider: 'playwright',
                     enabled: true,
                     headless: true,
+                    screenshotFailures: false,
                     instances: [{ browser: 'chromium' }]
                 };
             }
