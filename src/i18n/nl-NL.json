@@ -35,7 +35,7 @@
                 "newKey": {
                     "title": "Welke sleutel wil je toevoegen?",
                     "placeholder": "Naam van de nieuwe sleutel",
-                    "description": "Hint: gebruik een `.` voor geneste sleutels,\nbijv. `this.is.some.key` is een sleutel die vier lagen diep is."
+                    "description": "Hint: gebruik een `.` voor geneste sleutels,\n\nbijv. `this.is.some.key` is een sleutel die vier lagen diep is."
                 },
                 "newLanguage": {
                     "title": "Welke taal wil je toevoegen?",

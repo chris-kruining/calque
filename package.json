@@ -8,6 +8,7 @@
   "dependencies": {
     "@solid-primitives/clipboard": "^1.6.0",
     "@solid-primitives/context": "^0.3.0",
+    "@solid-primitives/deep": "^0.3.0",
     "@solid-primitives/destructure": "^0.2.0",
     "@solid-primitives/event-listener": "^2.4.0",
     "@solid-primitives/i18n": "^2.2.0",

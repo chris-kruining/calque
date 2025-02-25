@@ -1,3 +1,4 @@
+import { trackStore } from "@solid-primitives/deep";
 import { Accessor, createEffect, createMemo, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { CustomPartial } from "solid-js/store/types/store.js";
@@ -93,8 +94,7 @@ export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>
     });
 
     const mutations = createMemo(() => {
-        // enumerate all values to make sure the memo is recalculated on any change
-        Object.values(state.value).map(entry => Object.values(entry ?? {}));
+        trackStore(state.value);
 
         return deepDiff(state.snapshot, state.value).toArray();
     });
