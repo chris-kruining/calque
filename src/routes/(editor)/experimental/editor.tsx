@@ -1,8 +1,7 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
-import { Textarea } from "~/components/textarea";
-import css from './formatter.module.css';
 import { Editor, useEditor } from "~/features/editor";
+import css from './editor.module.css';
 
 const tempVal = `
 # Header
@@ -37,11 +36,10 @@ export default function Formatter(props: {}) {
 
     return <div class={css.root}>
         <textarea oninput={onInput} title="markdown">{value()}</textarea>
-        {/* <Editor value={value()} oninput={setValue}>
-            <SearchAndReplace />
-        </Editor> */}
 
-        <Textarea class={css.textarea} title="html" value={value()} oninput={setValue} lang="en-GB" />
+        <Editor value={value()} oninput={setValue}>
+            <SearchAndReplace />
+        </Editor>
     </div>;
 }
 
