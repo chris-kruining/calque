@@ -103,7 +103,7 @@ export function createSource(value: Accessor<string>): Source {
     });
 
     createEffect(() => {
-        setStore('metadata', 'queryResults', findMatches(store.plain, store.query).toArray());
+        setStore('metadata', 'queryResults', findMatches(store.plain, store.query));
     });
 
     return src;

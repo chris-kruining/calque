@@ -37,11 +37,11 @@ export default function Formatter(props: {}) {
 
     return <div class={css.root}>
         <textarea oninput={onInput} title="markdown">{value()}</textarea>
-        <Editor value={value()} oninput={setValue}>
+        {/* <Editor value={value()} oninput={setValue}>
             <SearchAndReplace />
-        </Editor>
+        </Editor> */}
 
-        {/* <Textarea class={css.textarea} title="html" value={value()} oninput={setValue} lang="en-GB" /> */}
+        <Textarea class={css.textarea} title="html" value={value()} oninput={setValue} lang="en-GB" />
     </div>;
 }
 

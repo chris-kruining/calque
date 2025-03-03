@@ -1,8 +1,8 @@
-import { createEffect, createSignal, on } from 'solid-js';
-import { getTextNodes } from '@solid-primitives/selection';
-import { createEditContext } from '~/features/editor';
+import { createEffect, createSignal, on, onMount } from 'solid-js';
+import { createSelection, getTextNodes } from '@solid-primitives/selection';
 import { createSource } from '~/features/source';
 import css from './textarea.module.css';
+import { debounce } from '@solid-primitives/scheduled';
 
 interface TextareaProps {
     class?: string;
@@ -16,13 +16,31 @@ interface TextareaProps {
 }
 
 export function Textarea(props: TextareaProps) {
+    const [selection, setSelection] = createSelection();
     const [editorRef, setEditorRef] = createSignal<HTMLElement>();
 
     const source = createSource(() => props.value);
-    const [text] = createEditContext(editorRef, () => source.out);
 
-    createEffect(() => {
-        source.out = text();
+    const mutate = debounce(() => {
+        const [, start, end] = selection();
+        const ref = editorRef();
+
+        if (ref) {
+            source.out = ref.innerHTML;
+
+            ref.style.height = `1px`;
+            ref.style.height = `${2 + ref.scrollHeight}px`;
+
+            setSelection([ref, start, end]);
+        }
+    }, 300);
+
+    onMount(() => {
+        new MutationObserver(mutate).observe(editorRef()!, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+        });
     });
 
     createEffect(() => {
@@ -42,12 +60,13 @@ export function Textarea(props: TextareaProps) {
     }));
 
     return <div
+        contentEditable
         ref={setEditorRef}
         class={`${css.textarea} ${props.class}`}
         title={props.title ?? ''}
         dir="auto"
         lang={props.lang}
-        innerHTML={text()}
+        innerHTML={source.out}
         data-placeholder={props.placeholder ?? ''}
         on:keydown={e => e.stopPropagation()}
         on:pointerdown={e => e.stopPropagation()}
