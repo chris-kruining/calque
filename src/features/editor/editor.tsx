@@ -1,11 +1,13 @@
 import { createContextProvider } from "@solid-primitives/context";
-import { Accessor, createEffect, createSignal, on, ParentProps, Setter } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, on, ParentProps, Setter } from "solid-js";
 import { createEditor } from "./context";
 import { createSource, Source } from "../source";
 import { getTextNodes } from "@solid-primitives/selection";
+import { isServer } from "solid-js/web";
 
 interface EditorContextType {
-    text: Accessor<string>;
+    readonly text: Accessor<string>;
+    readonly selection: Accessor<Range | undefined>;
     readonly source: Source;
     select(range: Range): void;
     mutate(setter: (prev: string) => string): void;
@@ -19,7 +21,7 @@ interface EditorContextProps extends Record<string, unknown> {
 
 const [EditorProvider, useEditor] = createContextProvider<EditorContextType, EditorContextProps>((props) => {
     const source = createSource(() => props.value);
-    const [text, { select, mutate }] = createEditor(props.ref, () => source.out);
+    const [text, { select, mutate, selection }] = createEditor(props.ref, () => source.out);
 
     createEffect(() => {
         props.oninput?.(source.in);
@@ -46,8 +48,15 @@ const [EditorProvider, useEditor] = createContextProvider<EditorContextType, Edi
         select,
         mutate,
         source,
+        selection,
     };
-}, { text: () => '', source: {} as Source, select() { }, mutate() { } });
+}, {
+    text: () => '',
+    selection: () => undefined,
+    source: {} as Source,
+    select() { },
+    mutate() { },
+});
 
 export { useEditor };
 

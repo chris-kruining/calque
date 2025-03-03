@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createEffect, createMemo, createSignal, onMount } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
 import { Editor, useEditor } from "~/features/editor";
 import css from './editor.module.css';
@@ -37,23 +37,53 @@ export default function Formatter(props: {}) {
     return <div class={css.root}>
         <textarea oninput={onInput} title="markdown">{value()}</textarea>
 
-        <Editor value={value()} oninput={setValue}>
-            <SearchAndReplace />
-        </Editor>
+        <div class={css.editor}>
+            <Editor value={value()} oninput={setValue}>
+                <Toolbar />
+                <SearchAndReplace />
+            </Editor>
+        </div>
     </div>;
+}
+
+function Toolbar() {
+    const { mutate, selection } = useEditor();
+
+    const bold = () => {
+        console.log('toggle text bold', selection());
+    };
+
+    return <div class={css.toolbar}>
+        <button onclick={bold}>bold</button>
+    </div>
 }
 
 function SearchAndReplace() {
     const { mutate, source } = useEditor();
     const [replacement, setReplacement] = createSignal('');
+    const [term, setTerm] = createSignal('');
+    const [caseInsensitive, setCaseInsensitive] = createSignal(true);
 
-    const replace = () => {
-        mutate(text => text.replaceAll(source.query, replacement()));
+    const query = createMemo(() => new RegExp(term(), caseInsensitive() ? 'gi' : 'g'));
+
+    createEffect(() => {
+        source.query = query();
+    });
+
+    const replace = (e: SubmitEvent) => {
+        e.preventDefault();
+
+        const form = e.target as HTMLFormElement;
+        form.reset();
+
+        mutate(text => text.replaceAll(query(), replacement()));
     };
 
-    return <form class={css.search}>
-        <input type="search" title="editor-search" placeholder="search for" oninput={e => source.query = e.target.value} />
-        <input type="search" title="editor-replace" placeholder="replace with" oninput={e => setReplacement(e.target.value)} />
-        <button onclick={() => replace()}>replace</button>
+    return <form on:submit={replace} class={css.search} popover="manual">
+        <label><span>Case insensitive</span><input type="checkbox" checked={caseInsensitive()} oninput={e => setCaseInsensitive(e.target.checked)} /></label>
+        <label><span>Search for</span><input type="search" title="editor-search" oninput={e => setTerm(e.target.value)} /></label>
+        <label><span>Replace with</span><input type="search" title="editor-replace" oninput={e => setReplacement(e.target.value)} /></label>
+
+        <button>replace</button>
     </form>;
 };

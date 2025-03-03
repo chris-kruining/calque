@@ -32,19 +32,37 @@
         text-decoration-line: grammar-error;
     }
 
-    .search {
-        position: absolute;
-        inset-inline-end: 0;
-        inset-block-start: 0;
-
+    .editor {
         display: block grid;
-        grid-auto-flow: row;
+        grid: auto 1fr / 100%;
 
-        padding: .5em;
-        gap: .5em;
+        .toolbar {
+            display: block grid;
+            grid-auto-flow: column;
+            place-content: start;
+        }
 
-        background-color: var(--surface-700);
-        border-radius: var(--radii-m);
-        box-shadow: var(--shadow-2);
+        .search {
+            position: absolute;
+            inset-inline-end: 0;
+            inset-block-start: 0;
+
+            grid-template-columns: 1fr 1fr;
+
+            padding: .5em;
+            gap: .5em;
+
+            background-color: var(--surface-700);
+            border-radius: var(--radii-m);
+            box-shadow: var(--shadow-2);
+
+            &:popover-open {
+                display: block grid;
+            }
+
+            & > label {
+                display: contents;
+            }
+        }
     }
 }

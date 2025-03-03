@@ -1,4 +1,4 @@
-import { Accessor, createEffect } from "solid-js";
+import { Accessor, createEffect, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { unified } from 'unified'
 import { visit } from "unist-util-visit";
@@ -17,7 +17,7 @@ interface SourceStore {
     in: string;
     out: string;
     plain: string;
-    query: string;
+    query: RegExp;
     metadata: {
         spellingErrors: [number, number][];
         grammarErrors: [number, number][];
@@ -28,7 +28,7 @@ interface SourceStore {
 export interface Source {
     in: string;
     out: string;
-    query: string;
+    query: RegExp;
     readonly spellingErrors: [number, number][];
     readonly grammarErrors: [number, number][];
     readonly queryResults: [number, number][];
@@ -39,7 +39,7 @@ const inToOutProcessor = unified().use(remarkParse).use(remarkRehype).use(rehype
 const outToInProcessor = unified().use(isServer ? rehypeParse : rehypeDomParse).use(rehypeRemark).use(remarkStringify, { bullet: '-' });
 
 export function createSource(value: Accessor<string>): Source {
-    const [store, setStore] = createStore<SourceStore>({ in: '', out: '', plain: '', query: '', metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
+    const [store, setStore] = createStore<SourceStore>({ in: '', out: '', plain: '', query: new RegExp('', 'gi'), metadata: { spellingErrors: [], grammarErrors: [], queryResults: [] } });
 
     const src: Source = {
         get in() {
@@ -121,13 +121,9 @@ function plainTextStringify() {
     };
 }
 
-function findMatches(text: string, query: string): [number, number][] {
-    if (query.length < 1) {
-        return [];
-    }
-
-    return text.matchAll(new RegExp(query, 'gi')).map<[number, number]>(({ index }) => {
-        return [index, index + query.length];
+function findMatches(text: string, query: RegExp): [number, number][] {
+    return text.matchAll(query).map<[number, number]>(({ 0: match, index }) => {
+        return [index, index + match.length];
     }).toArray();
 }
 

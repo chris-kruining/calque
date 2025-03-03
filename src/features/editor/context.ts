@@ -7,13 +7,23 @@ import { createMap } from './map';
 import { splice } from "~/utilities";
 import rehypeParse from "rehype-parse";
 
-type Editor = [Accessor<string>, { select(range: Range): void, mutate(setter: (text: string) => string): void }];
+type Editor = [Accessor<string>, { select(range: Range): void, mutate(setter: (text: string) => string): void, readonly selection: Accessor<Range | undefined> }];
+
+interface EditorStoreType {
+    text: string;
+    isComposing: boolean;
+    selection: Range | undefined;
+    characterBounds: DOMRect[];
+    controlBounds: DOMRect;
+    selectionBounds: DOMRect;
+}
 
 export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
     if (isServer) {
         return [value, {
             select() { },
             mutate() { },
+            selection: () => undefined,
         }];
     }
 
@@ -25,9 +35,10 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         text: value(),
     });
 
-    const [store, setStore] = createStore({
+    const [store, setStore] = createStore<EditorStoreType>({
         text: value(),
         isComposing: false,
+        selection: undefined,
 
         // Bounds
         characterBounds: new Array<DOMRect>(),
@@ -83,6 +94,8 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
     function updateSelection(range: Range) {
         context.updateSelection(...indexMap.toHtmlIndices(range));
         context.updateSelectionBounds(range.getBoundingClientRect());
+
+        setStore('selection', range);
 
         queueMicrotask(() => {
             const selection = window.getSelection();
@@ -198,6 +211,8 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
             mutate(setter) {
                 setStore('text', setter);
             },
+
+            selection: createMemo(() => store.selection),
         }];
 }
 
