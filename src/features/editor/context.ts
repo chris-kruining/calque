@@ -12,7 +12,7 @@ type Editor = [Accessor<string>, { select(range: Range): void, mutate(setter: (t
 export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
     if (isServer) {
         return [value, {
-            select(range) { },
+            select() { },
             mutate() { },
         }];
     }
@@ -101,8 +101,6 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
                 selection.removeAllRanges();
             }
 
-            console.log('is it me?');
-
             selection.addRange(range);
         });
     }
@@ -149,7 +147,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
 
                 updateText(start, end, '&nbsp;&nbsp;&nbsp;&nbsp;');
             } else if (e.key === 'Enter') {
-                updateText(start, end, '\n');
+                updateText(start, end, '</p><p>&nbsp;');
             }
         },
     });
@@ -270,7 +268,7 @@ declare global {
 
     interface EditContextConstructor {
         new(): EditContext;
-        new(options: Partial<{ text: string, selectionStart: number, selectionEnd: number }>): EditContext;
+        new(options: Partial<Pick<EditContext, 'text' | 'selectionStart' | 'selectionEnd'>>): EditContext;
         readonly prototype: EditContext;
     }
 

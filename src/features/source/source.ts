@@ -121,26 +121,14 @@ function plainTextStringify() {
     };
 }
 
-function* findMatches(text: string, query: string): Generator<[number, number], void, unknown> {
+function findMatches(text: string, query: string): [number, number][] {
     if (query.length < 1) {
-        return;
+        return [];
     }
 
-    let startIndex = 0;
-
-    while (startIndex < text.length) {
-        const index = text.indexOf(query, startIndex);
-
-        if (index === -1) {
-            break;
-        }
-
-        const end = index + query.length;
-
-        yield [index, end];
-
-        startIndex = end;
-    }
+    return text.matchAll(new RegExp(query, 'gi')).map<[number, number]>(({ index }) => {
+        return [index, index + query.length];
+    }).toArray();
 }
 
 const spellChecker = checker(/\w+/gi);

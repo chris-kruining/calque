@@ -1,10 +1,8 @@
-import { Component, createEffect, createMemo, createSignal, For, on, untrack } from 'solid-js';
-import { createSelection, getTextNodes } from '@solid-primitives/selection';
-import { isServer } from 'solid-js/web';
+import { createEffect, createSignal, on } from 'solid-js';
+import { getTextNodes } from '@solid-primitives/selection';
 import { createEditContext } from '~/features/editor';
 import { createSource } from '~/features/source';
 import css from './textarea.module.css';
-import { debounce } from '@solid-primitives/scheduled';
 
 interface TextareaProps {
     class?: string;
@@ -18,11 +16,10 @@ interface TextareaProps {
 }
 
 export function Textarea(props: TextareaProps) {
-    const [replacement, setReplacement] = createSignal('');
     const [editorRef, setEditorRef] = createSignal<HTMLElement>();
 
     const source = createSource(() => props.value);
-    const [text, { mutate }] = createEditContext(editorRef, () => source.out);
+    const [text] = createEditContext(editorRef, () => source.out);
 
     createEffect(() => {
         source.out = text();
@@ -44,29 +41,17 @@ export function Textarea(props: TextareaProps) {
         createHighlights(ref, 'search-results', errors);
     }));
 
-    const replace = () => {
-        mutate(text => text.replaceAll(source.query, replacement()));
-    };
-
-    return <>
-        <div class={css.search}>
-            <input type="search" title={`${props.title ?? ''}-search`} placeholder="search for" oninput={e => source.query = e.target.value} />
-            <input type="search" title={`${props.title ?? ''}-replace`} placeholder="replace with" oninput={e => setReplacement(e.target.value)} />
-            <button onclick={() => replace()}>replace</button>
-        </div>
-
-        <div
-            ref={setEditorRef}
-            class={`${css.textarea} ${props.class}`}
-            title={props.title ?? ''}
-            dir="auto"
-            lang={props.lang}
-            innerHTML={text()}
-            data-placeholder={props.placeholder ?? ''}
-            on:keydown={e => e.stopPropagation()}
-            on:pointerdown={e => e.stopPropagation()}
-        />
-    </>;
+    return <div
+        ref={setEditorRef}
+        class={`${css.textarea} ${props.class}`}
+        title={props.title ?? ''}
+        dir="auto"
+        lang={props.lang}
+        innerHTML={text()}
+        data-placeholder={props.placeholder ?? ''}
+        on:keydown={e => e.stopPropagation()}
+        on:pointerdown={e => e.stopPropagation()}
+    />;
 }
 
 const createHighlights = (node: Node, type: string, ranges: [number, number][]) => {

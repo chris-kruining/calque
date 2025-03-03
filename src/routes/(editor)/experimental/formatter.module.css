@@ -19,4 +19,32 @@
         padding: .5em;
         background-color: transparent;
     }
+
+    & ::highlight(search-results) {
+        background-color: var(--secondary-900);
+    }
+
+    & ::highlight(spelling-error) {
+        text-decoration-line: spelling-error;
+    }
+
+    & ::highlight(grammar-error) {
+        text-decoration-line: grammar-error;
+    }
+
+    .search {
+        position: absolute;
+        inset-inline-end: 0;
+        inset-block-start: 0;
+
+        display: block grid;
+        grid-auto-flow: row;
+
+        padding: .5em;
+        gap: .5em;
+
+        background-color: var(--surface-700);
+        border-radius: var(--radii-m);
+        box-shadow: var(--shadow-2);
+    }
 }
