@@ -71,6 +71,10 @@ export default function GridExperiment() {
         sort: { by: 'name', reversed: false },
     });
 
+    createEffect(() => {
+        console.log(rows);
+    });
+
     return <div class={css.root}>
         <Sidebar as="aside" label={'Grid options'} class={css.sidebar}>
             <fieldset>
@@ -107,13 +111,13 @@ type M = { kind: MutarionKind, key: string, original?: any, value?: any };
 const Mutations: Component<{ mutations: Mutation[] }> = (props) => {
     const columns: Column<M>[] = [{ id: 'key', label: 'Key' }, { id: 'original', label: 'Old' }, { id: 'value', label: 'New' }];
 
-    const rows = createMemo(() => createDataSet<M>(props.mutations));
+    const rows = createDataSet<M>(() => props.mutations);
 
     createEffect(() => {
-        rows().group({ by: 'kind' });
+        rows.group({ by: 'kind' });
     });
 
-    return <Table rows={rows()} columns={columns}>{{
+    return <Table rows={rows} columns={columns}>{{
         original: ({ value }) => value ? <del><pre>{JSON.stringify(value, null, 2)}</pre></del> : null,
         value: ({ value }) => value ? <ins><pre>{JSON.stringify(value, null, 2)}</pre></ins> : null,
     }}</Table>
