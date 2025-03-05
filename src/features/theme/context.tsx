@@ -18,8 +18,6 @@ export interface State {
 const getSession = async () => {
     'use server';
 
-    console.log(process.env.SESSION_SECRET);
-
     return useSession<State>({
         password: process.env.SESSION_SECRET!,
     });
