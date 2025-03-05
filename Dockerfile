@@ -13,7 +13,7 @@ RUN cd /temp/prod && bun install --frozen-lockfile --production
 FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
-RUN echo "SESSION_SECRET=$(head -c 64 /dev/random | base64)" > .env
+# RUN echo "SESSION_SECRET=$(head -c 64 /dev/random | base64)" > .env
 
 ENV NODE_ENV=production
 ENV SERVER_PRESET=bun
