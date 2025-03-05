@@ -18,6 +18,7 @@ export default function Experimental(props: ParentProps) {
       <Menu.Item command={goTo.withLabel('grid').with('grid')} />
       <Menu.Item command={goTo.withLabel('context-menu').with('context-menu')} />
       <Menu.Item command={goTo.withLabel('formatter').with('formatter')} />
+      <Menu.Item command={goTo.withLabel('file-system-observer').with('file-system-observer')} />
     </Menu.Root>
 
     <ErrorBoundary fallback={e => <ErrorComp error={e} />}>

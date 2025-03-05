@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, For, onMount, untrack } from 'solid-js';
+import { Component, createEffect, createMemo, createSignal, For, on, onMount, untrack } from 'solid-js';
 import { debounce } from '@solid-primitives/scheduled';
 import { createSelection, getTextNodes } from '@solid-primitives/selection';
 import { createSource } from '~/features/source';
@@ -18,12 +18,21 @@ interface TextareaProps {
 export function Textarea(props: TextareaProps) {
     const [selection, setSelection] = createSelection();
     const [editorRef, setEditorRef] = createSignal<HTMLElement>();
+    let mounted = false;
 
     const source = createSource(props.value);
 
-    createEffect(() => {
-        props.oninput?.(source.in);
-    });
+    createEffect(on(() => [props.oninput, source.in] as const, ([oninput, text]) => {
+        if (!mounted) {
+            return;
+        }
+
+        oninput?.(text);
+    }));
+
+    onMount((() => {
+        mounted = true;
+    }));
 
     createEffect(() => {
         source.in = props.value;
@@ -109,13 +118,19 @@ const Suggestions: Component = () => {
         const ref = untrack(() => suggestionRef()!);
 
         if (m === undefined) {
-            ref.hidePopover();
+            if (ref.matches(':popover-open')) {
+                ref.hidePopover();
+            }
 
             return;
         }
 
         m.style.setProperty('anchor-name', '--suggestions');
-        ref.showPopover();
+
+        if (ref.matches(':not(:popover-open)')) {
+            ref.showPopover();
+        }
+
         ref.focus()
 
         return m;
