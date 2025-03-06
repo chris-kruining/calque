@@ -28,7 +28,7 @@ const groupBy = (rows: DataSetRowNode<number, Entry>[]) => {
             : ({ kind: 'group', key, groupedBy: 'key', nodes: group(nodes.map(n => ({ ...n, _key: n._key.slice(key.length + 1) }))) })
         );
 
-    return group(rows.map<R>(r => ({ ...r, _key: r.value.key }))) as any;
+    return group(rows.filter(r => r.value.key).map<R>(r => ({ ...r, _key: r.value.key }))) as any;
 }
 
 export function Grid(props: { class?: string, rows: Entry[], locales: string[], api?: (api: GridApi) => any, children?: (key: string) => JSX.Element }) {
@@ -64,19 +64,18 @@ export function Grid(props: { class?: string, rows: Entry[], locales: string[], 
     const [api, setApi] = createSignal<GridCompApi<Entry>>();
 
     // Normalize dataset in order to make sure all the files have the correct structure
-    createEffect(() => {
-        // For tracking
-        props.rows;
-        // const value = untrack(() => rows.value);
+    // createEffect(() => {
+    //     // For tracking
+    //     props.rows;
 
-        rows.mutateEach(({ key, ...locales }) => ({ key, ...Object.fromEntries(Object.entries(locales).map(([locale, value]) => [locale, value ?? ''])) }))
-    });
+    //     rows.mutateEach(({ key, ...locales }) => ({ key, ...Object.fromEntries(Object.entries(locales).map(([locale, value]) => [locale, value ?? ''])) }))
+    // });
 
-    createEffect(() => {
-        const l = addedLocales();
+    // createEffect(() => {
+    //     const l = addedLocales();
 
-        rows.mutateEach(({ key, ...rest }) => ({ key, ...rest, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
-    });
+    //     rows.mutateEach(({ key, ...rest }) => ({ key, ...rest, ...Object.fromEntries(l.map(locale => [locale, rest[locale] ?? ''])) }));
+    // });
 
     createEffect(() => {
         props.api?.({

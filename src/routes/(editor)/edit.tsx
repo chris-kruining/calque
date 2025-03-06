@@ -13,9 +13,8 @@ import { useI18n } from "~/features/i18n";
 import { makePersisted } from "@solid-primitives/storage";
 import { writeClipboard } from "@solid-primitives/clipboard";
 import { destructure } from "@solid-primitives/destructure";
-import css from "./edit.module.css";
 import { contentsOf } from "~/features/file/helpers";
-import { createHtmlParser, createMarkdownParser, createSource } from "~/features/source";
+import css from "./edit.module.css";
 
 const isInstalledPWA = !isServer && window.matchMedia('(display-mode: standalone)').matches;
 
@@ -346,6 +345,7 @@ const Content: Component<{ directory: FileSystemDirectoryHandle, api?: Setter<Gr
     const [api, setApi] = createSignal<GridApi>();
 
     const files = readFiles(() => props.directory);
+    // const __contents = contentsOf(() => props.directory);
     const [contents] = createResource(files, (files) => Promise.all(Object.entries(files).map(async ([id, { file, handle }]) => ({ id, handle, lang: file.name.split('.').at(0)!, entries: (await read(file))! }))), { initialValue: [] });
 
     const [entries, rows] = destructure(() => {
