@@ -1,9 +1,8 @@
-import { Component, createEffect, createMemo, createSignal, For, on, onMount, untrack } from 'solid-js';
+import { createEffect, createSignal, on, onMount } from 'solid-js';
 import { debounce } from '@solid-primitives/scheduled';
 import { createSelection, getTextNodes } from '@solid-primitives/selection';
 import { createSource } from '~/features/source';
 import css from './textarea.module.css';
-import { debounce } from '@solid-primitives/scheduled';
 
 interface TextareaProps {
     class?: string;
@@ -21,7 +20,7 @@ export function Textarea(props: TextareaProps) {
     const [editorRef, setEditorRef] = createSignal<HTMLElement>();
     let mounted = false;
 
-    const source = createSource(props.value);
+    const source = createSource(() => props.value);
 
     createEffect(on(() => [props.oninput, source.in] as const, ([oninput, text]) => {
         if (!mounted) {
@@ -44,6 +43,8 @@ export function Textarea(props: TextareaProps) {
         const ref = editorRef();
 
         if (ref) {
+            console.log(ref.innerHTML);
+
             source.out = ref.innerHTML;
 
             ref.style.height = `1px`;
@@ -77,116 +78,17 @@ export function Textarea(props: TextareaProps) {
         createHighlights(ref, 'search-results', errors);
     }));
 
-    return <>
-        <Suggestions />
-        <input class={css.search} type="search" oninput={e => source.query = e.target.value} />
-        <div
-            ref={setEditorRef}
-            class={`${css.textarea} ${props.class}`}
-            contentEditable
-            dir="auto"
-            lang={props.lang}
-            innerHTML={source.out}
-            data-placeholder={props.placeholder ?? ''}
-            on:keydown={e => e.stopPropagation()}
-            on:pointerdown={e => e.stopPropagation()}
-        />
-    </>;
-}
-
-const Suggestions: Component = () => {
-    const [selection] = createSelection();
-    const [suggestionRef, setSuggestionRef] = createSignal<HTMLElement>();
-    const [suggestions, setSuggestions] = createSignal<string[]>([]);
-
-    const marker = createMemo(() => {
-        if (isServer) {
-            return;
-        }
-
-        const [n] = selection();
-        const s = window.getSelection();
-
-        if (n === null || s === null || s.rangeCount < 1) {
-            return;
-        }
-
-        return (findMarkerNode(s.getRangeAt(0)?.commonAncestorContainer) ?? undefined) as HTMLElement | undefined;
-    });
-
-    createEffect<HTMLElement | undefined>((prev) => {
-        if (prev) {
-            prev.style.setProperty('anchor-name', null);
-        }
-
-        const m = marker();
-        const ref = untrack(() => suggestionRef()!);
-
-        if (m === undefined) {
-            if (ref.matches(':popover-open')) {
-                ref.hidePopover();
-            }
-
-            return;
-        }
-
-        m.style.setProperty('anchor-name', '--suggestions');
-
-        if (ref.matches(':not(:popover-open)')) {
-            ref.showPopover();
-        }
-
-        ref.focus()
-
-        return m;
-    });
-
-    createEffect(() => {
-        marker();
-
-        setSuggestions(Array(Math.ceil(Math.random() * 5)).fill('').map((_, i) => `suggestion ${i}`));
-    });
-
-    const onPointerDown = (e: PointerEvent) => {
-        marker()?.replaceWith(document.createTextNode(e.target.textContent));
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-        console.log(e);
-    }
-
-    return <menu ref={setSuggestionRef} class={css.suggestions} popover="manual" onkeydown={onKeyDown}>
-        <For each={suggestions()}>{
-            suggestion => <li onpointerdown={onPointerDown}>{suggestion}</li>
-        }</For>
-    </menu>;
-};
-
-const findMarkerNode = (node: Node | null) => {
-    while (node !== null) {
-        if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).hasAttribute('data-marker')) {
-            break;
-        }
-
-        node = node.parentNode;
-    }
-
-    return node;
-};
-
-const spellChecker = checker(/\w+/gi);
-const grammarChecker = checker(/\w+\s+\w+/gi);
-
-function checker(regex: RegExp) {
-    return (subject: string, lang: string): [number, number][] => {
-        // return [];
-
-        const threshold = .75//.99;
-
-        return Array.from<RegExpExecArray>(subject.matchAll(regex)).filter(() => Math.random() >= threshold).map(({ 0: match, index }) => {
-            return [index, index + match.length] as const;
-        });
-    }
+    return <div
+        ref={setEditorRef}
+        class={`${css.textarea} ${props.class}`}
+        contentEditable
+        dir="auto"
+        lang={props.lang}
+        innerHTML={source.out}
+        data-placeholder={props.placeholder ?? ''}
+        on:keydown={e => e.stopPropagation()}
+        on:pointerdown={e => e.stopPropagation()}
+    />;
 }
 
 const createHighlights = (node: Node, type: string, ranges: [number, number][]) => {

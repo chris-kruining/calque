@@ -2,15 +2,16 @@ import { createEventListenerMap, DocumentEventListener, WindowEventListener } fr
 import { Accessor, createEffect, createMemo, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { isServer } from "solid-js/web";
-import { unified } from "unified";
-import { createMap } from './map';
+import { createMap, IndexRange } from './map';
 import { splice } from "~/utilities";
-import rehypeParse from "rehype-parse";
+import { createState } from "./state";
+import type { Root } from 'hast';
 
-type Editor = [Accessor<string>, { select(range: Range): void, mutate(setter: (text: string) => string): void, readonly selection: Accessor<Range | undefined> }];
+export type SelectFunction = (range: Range) => void;
+export type MutateFunction = (setter: (ast: Root) => Root) => void;
+type Editor = [Accessor<string>, { select: SelectFunction, mutate: MutateFunction, readonly selection: Accessor<IndexRange> }];
 
 interface EditorStoreType {
-    text: string;
     isComposing: boolean;
     selection: Range | undefined;
     characterBounds: DOMRect[];
@@ -23,7 +24,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         return [value, {
             select() { },
             mutate() { },
-            selection: () => undefined,
+            selection: () => [undefined, undefined],
         }];
     }
 
@@ -35,8 +36,9 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         text: value(),
     });
 
+    const state = createState(value);
+    const indexMap = createMap(() => ref()!, () => state.ast);
     const [store, setStore] = createStore<EditorStoreType>({
-        text: value(),
         isComposing: false,
         selection: undefined,
 
@@ -45,9 +47,6 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         controlBounds: new DOMRect(),
         selectionBounds: new DOMRect(),
     });
-
-    const ast = createMemo(() => unified().use(rehypeParse).parse(store.text));
-    const indexMap = createMap(() => ref()!, ast);
 
     createEventListenerMap<any>(context, {
         textupdate(e: TextUpdateEvent) {
@@ -82,7 +81,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
     function updateText(start: number, end: number, text: string) {
         context.updateText(start, end, text);
 
-        setStore('text', splice(store.text, start, end, text));
+        state.text = splice(state.text, start, end, text);
 
         context.updateSelection(start + text.length, start + text.length);
     }
@@ -167,6 +166,8 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
 
     onMount(() => {
         updateControlBounds();
+
+        updateSelection(indexMap.toRange(40, 60))
     });
 
     createEffect((last?: Element) => {
@@ -186,33 +187,42 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
     });
 
     createEffect(() => {
+    });
+
+    createEffect(() => {
         updateText(0, -0, value());
     });
 
     createEffect(() => {
-        store.text;
+        state.text;
 
         if (document.activeElement === untrack(ref)) {
             queueMicrotask(() => {
-                console.log();
-
                 updateSelection(indexMap.toRange(context.selectionStart, context.selectionEnd));
             });
         }
     });
 
     return [
-        createMemo(() => store.text),
+        createMemo(() => state.text),
         {
             select(range: Range) {
                 updateSelection(range);
             },
 
             mutate(setter) {
-                setStore('text', setter);
+                state.ast = setter(state.ast);
             },
 
-            selection: createMemo(() => store.selection),
+            selection: createMemo<IndexRange>(() => {
+                const selection = store.selection;
+
+                if (!selection) {
+                    return [undefined, undefined];
+                }
+
+                return indexMap.atHtmlPosition(selection);
+            }),
         }];
 }
 

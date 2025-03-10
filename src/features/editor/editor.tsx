@@ -1,16 +1,17 @@
 import { createContextProvider } from "@solid-primitives/context";
 import { Accessor, createEffect, createMemo, createSignal, on, ParentProps, Setter } from "solid-js";
-import { createEditor } from "./context";
+import { createEditor, MutateFunction, SelectFunction } from "./context";
 import { createSource, Source } from "../source";
 import { getTextNodes } from "@solid-primitives/selection";
 import { isServer } from "solid-js/web";
+import { IndexRange } from "./map";
 
 interface EditorContextType {
     readonly text: Accessor<string>;
-    readonly selection: Accessor<Range | undefined>;
+    readonly selection: Accessor<IndexRange>;
     readonly source: Source;
-    select(range: Range): void;
-    mutate(setter: (prev: string) => string): void;
+    select: SelectFunction;
+    mutate: MutateFunction;
 }
 
 interface EditorContextProps extends Record<string, unknown> {
@@ -52,7 +53,7 @@ const [EditorProvider, useEditor] = createContextProvider<EditorContextType, Edi
     };
 }, {
     text: () => '',
-    selection: () => undefined,
+    selection: () => [undefined, undefined],
     source: {} as Source,
     select() { },
     mutate() { },

@@ -129,7 +129,8 @@ export function* deepDiff<T1 extends object, T2 extends object>(a: T1, b: T2, pa
     }
 };
 
-const isIterable = (subject: object): subject is Iterable<any> => ['boolean', 'undefined', 'null', 'number'].includes(typeof subject) === false;
+const nonIterableTypes = ['boolean', 'undefined', 'null', 'number'];
+const isIterable = (subject: object): subject is Iterable<any> => nonIterableTypes.includes(typeof subject) === false;
 const entriesOf = (subject: object): Iterable<readonly [string | number, any]> => {
     if (subject instanceof Array) {
         return subject.entries();

@@ -3,17 +3,16 @@ import { getTextNodes } from '@solid-primitives/selection';
 import { Accessor, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { visit } from 'unist-util-visit';
 
-type IndexNode = { node: Node, text: { start: number, end: number }, html: { start: number, end: number } };
-type IndexMap = IndexNode[];
+export type IndexNode = { node: Text, dom: Node, text: { start: number, end: number }, html: { start: number, end: number }, offset: number };
+export type IndexMap = IndexNode[];
+export type IndexRange = [IndexNode, IndexNode] | [undefined, undefined];
 
 export function createMap(root: Accessor<Element | undefined>, ast: Accessor<Root>) {
     // Observe the element so that the references to the nodes in the indices are updated if the DOM is changed
     const latestMutations = observe(root);
 
     const indices = createMemo(() => {
-        latestMutations();
-
-        const node = root();
+        const [node] = latestMutations();
 
         if (node === undefined) {
             return [];
@@ -23,13 +22,36 @@ export function createMap(root: Accessor<Element | undefined>, ast: Accessor<Roo
     });
 
     return {
-        atHtmlPosition(index: number) {
-            return indices().find(({ html }) => html.start <= index && html.end >= index);
+        atHtmlPosition(range: Range): IndexRange {
+            const start = { ...(indices().find(({ dom }) => dom === range.startContainer)!) };
+            const end = indices().find(({ dom }) => dom === range.endContainer);
+
+            if (!start || !end) {
+                return [undefined, undefined];
+            }
+
+            start.offset = range.startOffset;
+            end.offset = range.endOffset;
+
+            return [start, end];
+        },
+
+        atTextPosition(start: number, end: number): IndexRange {
+            const startNode = { ...(indices().find(({ html }) => html.start <= start && html.end >= start)!) };
+            const endNode = indices().find(({ html }) => html.start <= end && html.end >= end);
+
+            if (!startNode || !endNode) {
+                return [undefined, undefined];
+            }
+
+            startNode.offset = start - startNode.html.start;
+            endNode.offset = end - endNode.html.start;
+
+            return [startNode, endNode];
         },
 
         toTextIndices(range: Range): [number, number] {
-            const startNode = indices().find(({ node }) => node === range.startContainer);
-            const endNode = indices().find(({ node }) => node === range.endContainer);
+            const [startNode, endNode] = this.atHtmlPosition(range);
 
             return [
                 startNode ? (startNode.text.start + range.startOffset) : -1,
@@ -38,8 +60,7 @@ export function createMap(root: Accessor<Element | undefined>, ast: Accessor<Roo
         },
 
         toHtmlIndices(range: Range): [number, number] {
-            const startNode = indices().find(({ node }) => node === range.startContainer);
-            const endNode = indices().find(({ node }) => node === range.endContainer);
+            const [startNode, endNode] = this.atHtmlPosition(range);
 
             return [
                 startNode ? (startNode.html.start + range.startOffset) : -1,
@@ -48,21 +69,15 @@ export function createMap(root: Accessor<Element | undefined>, ast: Accessor<Roo
         },
 
         toRange(start: number, end: number): Range {
-            const startNode = indices().find(({ html }) => html.start <= start && html.end >= start);
-            const endNode = indices().find(({ html }) => html.start <= end && html.end >= end);
-
+            const [startNode, endNode] = this.atTextPosition(start, end);
             const range = new Range();
 
             if (startNode) {
-                const offset = start - startNode.html.start;
-
-                range.setStart(startNode.node, offset);
+                range.setStart(startNode.dom, startNode.offset);
             }
 
             if (endNode) {
-                const offset = end - endNode.html.start;
-
-                range.setEnd(endNode.node, offset);
+                range.setEnd(endNode.dom, endNode.offset);
             }
 
             return range;
@@ -75,12 +90,12 @@ const createIndices = (root: Node, ast: Root): IndexMap => {
     const indices: IndexMap = [];
 
     let index = 0;
-    visit(ast, n => n.type === 'text', (node) => {
+    visit(ast, (n): n is Text => n.type === 'text', (node) => {
         const { position, value } = node as Text;
         const end = index + value.length;
 
         if (position) {
-            indices.push({ node: nodes.shift()!, text: { start: index, end }, html: { start: position.start.offset!, end: position.end.offset! } });
+            indices.push({ node, dom: nodes.shift()!, text: { start: index, end }, html: { start: position.start.offset!, end: position.end.offset! }, offset: 0 });
         }
 
         index = end;
@@ -89,7 +104,7 @@ const createIndices = (root: Node, ast: Root): IndexMap => {
     return indices;
 };
 
-const observe = (node: Accessor<Node | undefined>): Accessor<MutationRecord[]> => {
+const observe = (node: Accessor<Node | undefined>): Accessor<readonly [Node | undefined, MutationRecord[]]> => {
     const [mutations, setMutations] = createSignal<MutationRecord[]>([]);
 
     const observer = new MutationObserver(records => {
@@ -110,5 +125,5 @@ const observe = (node: Accessor<Node | undefined>): Accessor<MutationRecord[]> =
         observer.disconnect();
     });
 
-    return mutations;
+    return createMemo(() => [node(), mutations()] as const);
 };

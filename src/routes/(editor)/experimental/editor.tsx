@@ -1,6 +1,9 @@
-import { createEffect, createMemo, createSignal, onMount } from "solid-js";
+import { createEffect, createMemo, createSignal } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
-import { Editor, useEditor } from "~/features/editor";
+import { Editor, splitAt, useEditor } from "~/features/editor";
+import { visitParents } from "unist-util-visit-parents";
+import findAncestor from 'unist-util-ancestor';
+import type * as hast from 'hast';
 import css from './editor.module.css';
 
 const tempVal = `
@@ -49,13 +52,91 @@ export default function Formatter(props: {}) {
 function Toolbar() {
     const { mutate, selection } = useEditor();
 
+    const matchesAncestor = (tree: hast.Node, node: hast.Text, predicate: (node: hast.Node) => boolean) => {
+        let matches = false;
+
+        visitParents(tree, n => n === node, (_, ancestors) => {
+            matches = ancestors.some(predicate);
+        });
+
+        return matches;
+    }
+
     const bold = () => {
-        console.log('toggle text bold', selection());
+        const [start, end] = selection();
+
+        if (!start || !end) {
+            return
+        }
+
+        mutate((ast) => {
+            console.log(end.node.value.slice(0, end.offset));
+
+            // Trim whitespace from selection
+            const matchStart = start.node.value.slice(start.offset).match(/^(\s+).*?$/);
+            if (matchStart !== null) {
+                start.offset += matchStart[1].length;
+            }
+
+            const matchEnd = end.node.value.slice(0, end.offset).match(/^.*?(\s+)$/);
+            if (matchEnd !== null) {
+                end.offset -= matchEnd[1].length;
+            }
+
+            // Edge case Unbold the selected characters
+            if (start.node === end.node) {
+                visitParents(ast, (n): n is hast.Text => n === start.node, (n, ancestors) => {
+                    const [strong, parent] = ancestors.toReversed();
+
+                    if (strong.type === 'element' && strong.tagName === 'strong') {
+                        parent.children.splice(parent.children.indexOf(strong as hast.ElementContent), 1,
+                            { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: n.value.slice(0, start.offset) }] },
+                            { type: 'text', value: n.value.slice(start.offset, end.offset) },
+                            { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: n.value.slice(end.offset) }] },
+                        );
+                    }
+                    else {
+                        strong.children.splice(strong.children.indexOf(n), 1,
+                            { type: 'text', value: n.value.slice(0, start.offset) },
+                            { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: n.value.slice(start.offset, end.offset) }] },
+                            { type: 'text', value: n.value.slice(end.offset) },
+                        );
+                    }
+                });
+
+                return ast;
+            }
+
+            const common = findAncestor(ast, [start.node, end.node] as const) as hast.Element;
+            const startIsBold = matchesAncestor(common, start.node, (node) => node.type === 'element' && node.tagName === 'strong');
+            const endIsBold = matchesAncestor(common, end.node, (node) => node.type === 'element' && node.tagName === 'strong');
+
+            // Extend to left
+            if (startIsBold) {
+                start.offset = 0;
+            }
+
+            // Extend to right
+            if (endIsBold) {
+                end.offset = end.node.value.length;
+            }
+
+            const [a, b] = splitAt(common, start.node, start.offset);
+            const [c, d] = splitAt({ type: 'root', children: b }, end.node, end.offset);
+            const boldedElement = { type: 'element', tagName: 'strong', children: c } as hast.RootContent;
+
+            common.children = [...a, boldedElement, ...d] as hast.ElementContent[];
+
+            console.log(c, d, common.children);
+
+            return ast;
+        });
+
     };
 
     return <div class={css.toolbar}>
         <button onclick={bold}>bold</button>
-    </div>
+    </div>;
 }
 
 function SearchAndReplace() {
