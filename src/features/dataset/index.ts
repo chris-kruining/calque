@@ -1,6 +1,6 @@
 import { trackStore } from "@solid-primitives/deep";
 import { Accessor, createEffect, createMemo, untrack } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createStore, unwrap } from "solid-js/store";
 import { CustomPartial } from "solid-js/store/types/store.js";
 import { deepCopy, deepDiff, MutarionKind, Mutation } from "~/utilities";
 
@@ -60,7 +60,7 @@ function defaultGroupingFunction<T>(groupBy: keyof T): GroupingFunction<number, 
 
 export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>, initialOptions?: { sort?: SortOptions<T>, group?: GroupOptions<T> }): DataSet<T> => {
     const [state, setState] = createStore<DataSetState<T>>({
-        value: deepCopy(data()),
+        value: structuredClone(data()),
         snapshot: data(),
         sorting: initialOptions?.sort,
         grouping: initialOptions?.group,
@@ -97,6 +97,10 @@ export const createDataSet = <T extends Record<string, any>>(data: Accessor<T[]>
         trackStore(state.value);
 
         return deepDiff(state.snapshot, state.value).toArray();
+    });
+
+    createEffect(() => {
+        console.log('muts', mutations());
     });
 
     const apply = (data: T[], mutations: Mutation[]) => {

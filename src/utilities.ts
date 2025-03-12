@@ -46,6 +46,20 @@ const decodeReplacer = (_: any, char: EncodedChar) => ({
 }[char.charAt(0) as ('t' | 'b' | 'n' | 'r' | 'f' | '\'' | '"' | 'u')]);
 export const decode = (subject: string): string => subject.replace(decodeRegex, decodeReplacer);
 
+const LAZY_SYMBOL = Symbol('not loaded');
+export const lazy = <T>(fn: () => T): (() => T) => {
+    let value: T | symbol = LAZY_SYMBOL;
+
+    return () => {
+        if (value === LAZY_SYMBOL) {
+            value = fn();
+        }
+
+        return value as T;
+    }
+};
+
+/** @deprecated just use structuredClone instead */
 export const deepCopy = <T>(original: T): T => {
     if (typeof original !== 'object' || original === null || original === undefined) {
         return original;

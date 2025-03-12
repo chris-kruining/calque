@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, untrack } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
 import { Textarea } from "~/components/textarea";
 import css from './textarea.module.css';

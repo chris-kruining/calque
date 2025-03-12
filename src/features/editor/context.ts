@@ -2,14 +2,15 @@ import { createEventListenerMap, DocumentEventListener, WindowEventListener } fr
 import { Accessor, createEffect, createMemo, onMount, untrack } from "solid-js";
 import { createStore } from "solid-js/store";
 import { isServer } from "solid-js/web";
-import { createMap, IndexRange } from './map';
-import { splice } from "~/utilities";
+import { createMap } from './map';
+import { lazy, splice } from "~/utilities";
 import { createState } from "./state";
-import type { Root } from 'hast';
+import type { Parent, Root, Text } from 'hast';
+import findAncestor from "unist-util-ancestor";
 
 export type SelectFunction = (range: Range) => void;
 export type MutateFunction = (setter: (ast: Root) => Root) => void;
-type Editor = [Accessor<string>, { select: SelectFunction, mutate: MutateFunction, readonly selection: Accessor<IndexRange> }];
+type Editor = [Accessor<string>, { select: SelectFunction, mutate: MutateFunction, readonly selection: Accessor<Index_Range | undefined> }];
 
 interface EditorStoreType {
     isComposing: boolean;
@@ -19,12 +20,21 @@ interface EditorStoreType {
     selectionBounds: DOMRect;
 }
 
+export interface Index_Range {
+    startNode: Text;
+    startOffset: number;
+    endNode: Text;
+    endOffset: number;
+
+    commonAncestor: () => Parent;
+}
+
 export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
     if (isServer) {
         return [value, {
             select() { },
             mutate() { },
-            selection: () => [undefined, undefined],
+            selection: () => undefined,
         }];
     }
 
@@ -83,7 +93,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
 
         state.text = splice(state.text, start, end, text);
 
-        context.updateSelection(start + text.length, start + text.length);
+        // context.updateSelection(start + text.length, start + text.length);
     }
 
     function updateControlBounds() {
@@ -167,7 +177,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
     onMount(() => {
         updateControlBounds();
 
-        updateSelection(indexMap.toRange(40, 60))
+        updateSelection(indexMap.fromHtmlIndices(40, 60))
     });
 
     createEffect((last?: Element) => {
@@ -198,7 +208,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
 
         if (document.activeElement === untrack(ref)) {
             queueMicrotask(() => {
-                updateSelection(indexMap.toRange(context.selectionStart, context.selectionEnd));
+                updateSelection(indexMap.fromHtmlIndices(context.selectionStart, context.selectionEnd));
             });
         }
     });
@@ -211,17 +221,42 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
             },
 
             mutate(setter) {
+                const [start, end] = indexMap.toTextIndices(store.selection!);
+
                 state.ast = setter(state.ast);
+
+                setTimeout(() => {
+                    console.log('RESTORING SELECTION')
+                    const range = indexMap.fromTextIndices(start, end);
+
+                    console.log(start, end, range);
+
+                    updateSelection(range);
+                }, 100);
             },
 
-            selection: createMemo<IndexRange>(() => {
+            selection: createMemo<Index_Range | undefined>(() => {
                 const selection = store.selection;
 
                 if (!selection) {
-                    return [undefined, undefined];
+                    return undefined;
                 }
 
-                return indexMap.atHtmlPosition(selection);
+                const [start, end] = indexMap.query(selection);
+
+                if (!start || !end) {
+                    return undefined;
+                }
+
+                return {
+                    startNode: start.node,
+                    startOffset: selection.startOffset,
+
+                    endNode: end.node,
+                    endOffset: selection.endOffset,
+
+                    commonAncestor: lazy(() => findAncestor(untrack(() => state.ast), [start.node, end.node]) as Parent),
+                }
             }),
         }];
 }

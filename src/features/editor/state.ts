@@ -28,8 +28,6 @@ export const createState = (value: Accessor<string>): State => {
         },
 
         set ast(next: Root) {
-            console.log(stringify(next));
-
             setText(stringify(next));
             setAst(next);
         },
