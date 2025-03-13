@@ -1,7 +1,7 @@
 import type { Node, Text, Parent, RootContent } from 'hast';
 import { find } from 'unist-util-find';
 import { visit } from 'unist-util-visit';
-import { hash } from './temp';
+import { hash } from './hash';
 
 export const createElement = (tagName: string, children: any[], properties: object = {}) => ({ type: 'element', tagName, children, properties });
 
@@ -14,7 +14,6 @@ export const splitBy = (tree: Parent, splitPoints: SplitPoint[]): RootContent[][
     const result: RootContent[][] = [];
     let remaining: RootContent[] = Object.hasOwn(tree, 'children') ? (tree as Parent).children : [];
 
-    console.log('kaas');
     // console.log(Object.groupBy(splitPoints, p => hash(p.node)));
 
     for (const { node, offset } of splitPoints) {
