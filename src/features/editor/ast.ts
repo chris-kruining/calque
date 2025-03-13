@@ -13,17 +13,21 @@ interface SplitPoint {
 export const splitBy = (tree: Parent, splitPoints: SplitPoint[]): RootContent[][] => {
     const result: RootContent[][] = [];
     let remaining: RootContent[] = Object.hasOwn(tree, 'children') ? (tree as Parent).children : [];
-
-    // console.log(Object.groupBy(splitPoints, p => hash(p.node)));
+    let lastNode;
+    let accumulatedOffset = 0;
 
     for (const { node, offset } of splitPoints) {
+        if (lastNode !== node) {
+            accumulatedOffset = 0;
+        }
+
         const index = remaining.findIndex(c => find(c, n => equals(n, node)));
 
         if (index === -1) {
             throw new Error('The tree does not contain the given node');
         }
 
-        const [targetLeft, targetRight] = splitNode(remaining[index], node, offset);
+        const [targetLeft, targetRight] = splitNode(remaining[index], node, offset - accumulatedOffset);
 
         const left = remaining.slice(0, index);
         const right = remaining.slice(index + 1);
@@ -38,6 +42,9 @@ export const splitBy = (tree: Parent, splitPoints: SplitPoint[]): RootContent[][
 
         remaining = right;
         result.push(left);
+
+        lastNode = node;
+        accumulatedOffset += offset;
     }
 
     result.push(remaining);

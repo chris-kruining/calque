@@ -1,3 +1,9 @@
+export const assert = (assertion: boolean, message: string) => {
+    if (assertion !== true) {
+        throw new Error(message);
+    }
+}
+
 export const splice = (subject: string, start: number, end: number, replacement: string) => {
     return `${subject.slice(0, start)}${replacement}${Object.is(end, -0) ? '' : subject.slice(end)}`;
 };

@@ -2,10 +2,7 @@ import { Accessor, createEffect, from, createSignal } from "solid-js";
 import { json } from "./parser";
 import { filter } from "~/utilities";
 import { isServer } from "solid-js/web";
-import { installIntoGlobal } from 'iterator-helpers-polyfill';
 import { debounce } from "@solid-primitives/scheduled";
-
-installIntoGlobal();
 
 interface Files extends Record<string, { handle: FileSystemFileHandle, file: File }> { }
 interface Contents extends Map<string, Map<string, string>> { }

@@ -1,9 +1,8 @@
-import { createEffect, createMemo, createSignal, untrack } from "solid-js";
+import { createEffect, createMemo, createSignal, onMount, untrack } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
-import { Editor, Index_Range, splitBy, createElement, useEditor, mergeNodes } from "~/features/editor";
-import { visitParents } from "unist-util-visit-parents";
-import type * as hast from 'hast';
+import { Editor, useEditor } from "~/features/editor";
 import css from './editor.module.css';
+import { assert } from "~/utilities";
 
 const tempVal = `
 # Header
@@ -49,48 +48,38 @@ export default function Formatter(props: {}) {
 }
 
 function Toolbar() {
-    const { mutate, selection } = useEditor();
-
-    const trimWhitespaceOn = ({ startNode: startContainer, endNode: endContainer, startOffset, endOffset, ...rest }: Index_Range): Index_Range => {
-        const matchStart = startContainer.value.slice(startOffset).match(/^(\s+).*?$/);
-        const matchEnd = endContainer.value.slice(0, endOffset).match(/^.*?(\s+)$/);
-
-        return {
-            startNode: startContainer,
-            startOffset: startOffset + (matchStart?.[1].length ?? 0),
-            endNode: endContainer,
-            endOffset: endOffset - (matchEnd?.[1].length ?? 0),
-            ...rest
-        };
-    };
-
     const bold = () => {
-        const range = selection();
+        const range = window.getSelection()!.getRangeAt(0);
+        // const { startContainer, startOffset, endContainer, endOffset, commonAncestorContainer } = range;
+        // console.log(startContainer, startOffset, endContainer, endOffset, commonAncestorContainer);
 
-        if (!range) {
+        if (range.startContainer.nodeType !== Node.TEXT_NODE) {
             return;
         }
 
-        mutate((ast) => {
-            const { startNode, endNode, startOffset, endOffset, commonAncestor } = trimWhitespaceOn(range);
+        if (range.endContainer.nodeType !== Node.TEXT_NODE) {
+            return;
+        }
 
-            const [left, toBold, right] = splitBy(commonAncestor(), [
-                { node: startNode, offset: startOffset },
-                { node: endNode, offset: endOffset },
-            ]);
+        const fragment = range.extractContents();
 
-            console.log(left, toBold, right);
-            const boldedElement = createElement('strong', toBold.flatMap(child => child.tagName === 'strong' ? mergeNodes(child.children) : child)) as hast.RootContent;
+        if (range.startContainer === range.commonAncestorContainer && range.endContainer === range.commonAncestorContainer && range.commonAncestorContainer.parentElement?.tagName === 'STRONG') {
+            range.selectNode(range.commonAncestorContainer.parentElement);
+            range.insertNode(fragment);
+        }
+        else {
+            const strong = document.createElement('strong');
+            strong.append(fragment);
 
-            // THIS IS WHERE I LEFT OFF
-            // AST needs to be clean!!!!
-
-            commonAncestor().children = [...left, boldedElement, ...right];
-
-            return ast;
-        });
-
+            range.insertNode(strong);
+        }
     };
+
+    onMount(() => {
+        queueMicrotask(() => {
+            // bold();
+        });
+    });
 
     return <div class={css.toolbar}>
         <button onclick={bold}>bold</button>

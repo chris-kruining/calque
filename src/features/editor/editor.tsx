@@ -1,15 +1,14 @@
 import { createContextProvider } from "@solid-primitives/context";
-import { Accessor, createEffect, createSignal, on, ParentProps, Setter } from "solid-js";
-import { createEditor, Index_Range, MutateFunction, SelectFunction } from "./context";
+import { Accessor, createEffect, createMemo, createSignal, on, ParentProps, Setter } from "solid-js";
+import { createEditor, SelectFunction } from "./context";
 import { createSource, Source } from "../source";
 import { getTextNodes } from "@solid-primitives/selection";
 
 interface EditorContextType {
     readonly text: Accessor<string>;
-    readonly selection: Accessor<Index_Range | undefined>;
+    readonly selection: Accessor<Range | undefined>;
     readonly source: Source;
     select: SelectFunction;
-    mutate: MutateFunction;
 }
 
 interface EditorContextProps extends Record<string, unknown> {
@@ -20,14 +19,10 @@ interface EditorContextProps extends Record<string, unknown> {
 
 const [EditorProvider, useEditor] = createContextProvider<EditorContextType, EditorContextProps>((props) => {
     const source = createSource(() => props.value);
-    const [text, { select, mutate, selection }] = createEditor(props.ref, () => source.out);
+    const { select, selection } = createEditor(props.ref, () => source.out);
 
     createEffect(() => {
         props.oninput?.(source.in);
-    });
-
-    createEffect(() => {
-        source.out = text();
     });
 
     createEffect(on(() => [props.ref()!, source.spellingErrors] as const, ([ref, errors]) => {
@@ -43,9 +38,8 @@ const [EditorProvider, useEditor] = createContextProvider<EditorContextType, Edi
     }));
 
     return {
-        text,
+        text: createMemo(() => source.out),
         select,
-        mutate,
         source,
         selection,
     };
@@ -54,7 +48,6 @@ const [EditorProvider, useEditor] = createContextProvider<EditorContextType, Edi
     selection: () => undefined,
     source: {} as Source,
     select() { },
-    mutate() { },
 });
 
 export { useEditor };
@@ -71,6 +64,12 @@ export function Editor(props: ParentProps<{ value: string, oninput?: (value: str
 
 function Content(props: { ref: Setter<Element | undefined> }) {
     const { text } = useEditor();
+
+    createEffect(() => {
+        text();
+
+        console.error('rerendering');
+    });
 
     return <div ref={props.ref} innerHTML={text()} />;
 }

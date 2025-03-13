@@ -20,6 +20,11 @@
         background-color: transparent;
     }
 
+    & ::highlight(debug) {
+        text-decoration: double underline;
+        text-decoration-color: cornflowerblue;
+    }
+
     & ::highlight(search-results) {
         background-color: var(--secondary-900);
     }

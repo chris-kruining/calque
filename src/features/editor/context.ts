@@ -1,16 +1,13 @@
 import { createEventListenerMap, DocumentEventListener, WindowEventListener } from "@solid-primitives/event-listener";
-import { Accessor, createEffect, createMemo, onMount, untrack } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import { isServer } from "solid-js/web";
 import { createMap } from './map';
-import { lazy, splice } from "~/utilities";
-import { createState } from "./state";
-import type { Parent, Root, Text } from 'hast';
-import findAncestor from "unist-util-ancestor";
+import { unified } from "unified";
+import rehypeParse from "rehype-parse";
 
 export type SelectFunction = (range: Range) => void;
-export type MutateFunction = (setter: (ast: Root) => Root) => void;
-type Editor = [Accessor<string>, { select: SelectFunction, mutate: MutateFunction, readonly selection: Accessor<Index_Range | undefined> }];
+type Editor = { select: SelectFunction, readonly selection: Accessor<Range | undefined> };
 
 interface EditorStoreType {
     isComposing: boolean;
@@ -20,22 +17,12 @@ interface EditorStoreType {
     selectionBounds: DOMRect;
 }
 
-export interface Index_Range {
-    startNode: Text;
-    startOffset: number;
-    endNode: Text;
-    endOffset: number;
-
-    commonAncestor: () => Parent;
-}
-
 export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
     if (isServer) {
-        return [value, {
+        return {
             select() { },
-            mutate() { },
             selection: () => undefined,
-        }];
+        };
     }
 
     if (!("EditContext" in window)) {
@@ -46,8 +33,9 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         text: value(),
     });
 
-    const state = createState(value);
-    const indexMap = createMap(() => ref()!, () => state.ast);
+    const mutations = observe(ref);
+    const ast = createMemo(() => parse(value()));
+    const indexMap = createMap(ref, ast);
     const [store, setStore] = createStore<EditorStoreType>({
         isComposing: false,
         selection: undefined,
@@ -58,13 +46,30 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         selectionBounds: new DOMRect(),
     });
 
+    createEffect(on(mutations, () => {
+        const selection = store.selection;
+
+        if (selection === undefined) {
+            return
+        }
+
+        queueMicrotask(() => {
+            console.log(selection);
+
+            updateSelection(selection);
+        });
+    }));
+
     createEventListenerMap<any>(context, {
         textupdate(e: TextUpdateEvent) {
-            const { updateRangeStart: start, updateRangeEnd: end, text } = e;
+            const selection = store.selection;
 
-            setStore('text', `${store.text.slice(0, start)}${text}${store.text.slice(end)}`);
+            if (!selection) {
+                return;
+            }
 
-            context.updateSelection(start + text.length, start + text.length);
+            selection.insertNode(document.createTextNode(e.text));
+            selection.collapse();
         },
 
         compositionstart() {
@@ -88,20 +93,20 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         },
     });
 
-    function updateText(start: number, end: number, text: string) {
-        context.updateText(start, end, text);
-
-        state.text = splice(state.text, start, end, text);
-
-        // context.updateSelection(start + text.length, start + text.length);
-    }
-
     function updateControlBounds() {
         context.updateControlBounds(ref()!.getBoundingClientRect());
     }
 
     function updateSelection(range: Range) {
-        context.updateSelection(...indexMap.toHtmlIndices(range));
+        const [start, end] = indexMap.query(range);
+
+        console.log(start, end, range);
+
+        if (!start || !end) {
+            return;
+        }
+
+        context.updateSelection(start.start + range.startOffset, end.start + range.endOffset);
         context.updateSelectionBounds(range.getBoundingClientRect());
 
         setStore('selection', range);
@@ -158,6 +163,8 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
             // keyCode === 229 is a special code that indicates an IME event.
             // https://developer.mozilla.org/en-US/docs/Web/API/Element/keydown_event#keydown_events_with_ime
             if (e.keyCode === 229) {
+                console.log(e);
+
                 return;
             }
 
@@ -167,9 +174,9 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
             if (e.key === 'Tab') {
                 e.preventDefault();
 
-                updateText(start, end, '&nbsp;&nbsp;&nbsp;&nbsp;');
+                context.updateText(start, end, '&nbsp;&nbsp;&nbsp;&nbsp;');
             } else if (e.key === 'Enter') {
-                updateText(start, end, '</p><p>&nbsp;');
+                context.updateText(start, end, '</p><p>&nbsp;');
             }
         },
     });
@@ -177,7 +184,8 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
     onMount(() => {
         updateControlBounds();
 
-        updateSelection(indexMap.fromHtmlIndices(40, 60))
+        // updateSelection(indexMap.fromHtmlIndices(40, 60))
+        // updateSelection(indexMap.fromHtmlIndices(599, 603))
     });
 
     createEffect((last?: Element) => {
@@ -196,70 +204,43 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         return el;
     });
 
-    createEffect(() => {
+    return {
+        select(range: Range) {
+            updateSelection(range);
+        },
+
+        selection: createMemo<Range | undefined>(() => {
+            return store.selection;
+        }),
+    };
+}
+
+const observe = (node: Accessor<Node | undefined>): Accessor<readonly [Node | undefined, MutationRecord[]]> => {
+    const [mutations, setMutations] = createSignal<MutationRecord[]>([]);
+
+    const observer = new MutationObserver(records => {
+        setMutations(records);
     });
 
     createEffect(() => {
-        updateText(0, -0, value());
-    });
+        const n = node();
 
-    createEffect(() => {
-        state.text;
+        observer.disconnect();
 
-        if (document.activeElement === untrack(ref)) {
-            queueMicrotask(() => {
-                updateSelection(indexMap.fromHtmlIndices(context.selectionStart, context.selectionEnd));
-            });
+        if (n) {
+            observer.observe(n, { characterData: true, subtree: true, childList: true });
         }
     });
 
-    return [
-        createMemo(() => state.text),
-        {
-            select(range: Range) {
-                updateSelection(range);
-            },
+    onCleanup(() => {
+        observer.disconnect();
+    });
 
-            mutate(setter) {
-                const [start, end] = indexMap.toTextIndices(store.selection!);
+    return createMemo(() => [node(), mutations()] as const);
+};
 
-                state.ast = setter(state.ast);
-
-                setTimeout(() => {
-                    console.log('RESTORING SELECTION')
-                    const range = indexMap.fromTextIndices(start, end);
-
-                    console.log(start, end, range);
-
-                    updateSelection(range);
-                }, 100);
-            },
-
-            selection: createMemo<Index_Range | undefined>(() => {
-                const selection = store.selection;
-
-                if (!selection) {
-                    return undefined;
-                }
-
-                const [start, end] = indexMap.query(selection);
-
-                if (!start || !end) {
-                    return undefined;
-                }
-
-                return {
-                    startNode: start.node,
-                    startOffset: selection.startOffset,
-
-                    endNode: end.node,
-                    endOffset: selection.endOffset,
-
-                    commonAncestor: lazy(() => findAncestor(untrack(() => state.ast), [start.node, end.node]) as Parent),
-                }
-            }),
-        }];
-}
+const parseProcessor = unified().use(rehypeParse)
+const parse = (text: string) => parseProcessor.parse(text);
 
 const equals = (a: Range, b: Range): boolean => {
     const keys: (keyof Range)[] = ['startOffset', 'endOffset', 'commonAncestorContainer', 'startContainer', 'endContainer'];
