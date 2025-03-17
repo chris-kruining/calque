@@ -1,5 +1,5 @@
 import { createContextProvider } from "@solid-primitives/context";
-import { Accessor, createEffect, createMemo, createSignal, on, ParentProps, Setter } from "solid-js";
+import { Accessor, createEffect, createMemo, createSignal, on, ParentProps, Setter, untrack } from "solid-js";
 import { createEditor, SelectFunction } from "./context";
 import { createSource, Source } from "../source";
 import { getTextNodes } from "@solid-primitives/selection";
@@ -19,7 +19,7 @@ interface EditorContextProps extends Record<string, unknown> {
 
 const [EditorProvider, useEditor] = createContextProvider<EditorContextType, EditorContextProps>((props) => {
     const source = createSource(() => props.value);
-    const { select, selection } = createEditor(props.ref, () => source.out);
+    const { select, selection } = createEditor(props.ref, () => source.out, next => source.out = next);
 
     createEffect(() => {
         props.oninput?.(source.in);
@@ -38,7 +38,7 @@ const [EditorProvider, useEditor] = createContextProvider<EditorContextType, Edi
     }));
 
     return {
-        text: createMemo(() => source.out),
+        text: () => source.out,
         select,
         source,
         selection,
@@ -65,11 +65,7 @@ export function Editor(props: ParentProps<{ value: string, oninput?: (value: str
 function Content(props: { ref: Setter<Element | undefined> }) {
     const { text } = useEditor();
 
-    createEffect(() => {
-        text();
-
-        console.error('rerendering');
-    });
+    createEffect(on(text, () => console.error('rerendering')));
 
     return <div ref={props.ref} innerHTML={text()} />;
 }

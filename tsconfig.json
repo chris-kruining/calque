@@ -17,7 +17,6 @@
       "@vitest/browser/providers/playwright",
       "vinxi/types/client",
       "vite-plugin-solid-svg/types-component-solid",
-      "vite-plugin-pwa/solid",
       "bun-types"
     ],
     "isolatedModules": true,

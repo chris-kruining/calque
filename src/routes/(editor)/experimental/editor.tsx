@@ -31,15 +31,15 @@ this is *a string* that contains italicized text
 export default function Formatter(props: {}) {
     const [value, setValue] = createSignal(tempVal);
 
-    const onInput = debounce((e: InputEvent) => {
+    const onInput = (e: InputEvent) => {
         setValue((e.target! as HTMLTextAreaElement).value);
-    }, 300);
+    };
 
     return <div class={css.root}>
         <textarea oninput={onInput} title="markdown">{value()}</textarea>
 
         <div class={css.editor}>
-            <Editor value={untrack(value)} oninput={setValue}>
+            <Editor value={value()} oninput={setValue}>
                 <Toolbar />
                 <SearchAndReplace />
             </Editor>
@@ -48,10 +48,12 @@ export default function Formatter(props: {}) {
 }
 
 function Toolbar() {
+    const { selection } = useEditor();
+
     const bold = () => {
-        const range = window.getSelection()!.getRangeAt(0);
-        // const { startContainer, startOffset, endContainer, endOffset, commonAncestorContainer } = range;
-        // console.log(startContainer, startOffset, endContainer, endOffset, commonAncestorContainer);
+        const range = untrack(selection)!;
+
+        console.log(range);
 
         if (range.startContainer.nodeType !== Node.TEXT_NODE) {
             return;
@@ -59,6 +61,13 @@ function Toolbar() {
 
         if (range.endContainer.nodeType !== Node.TEXT_NODE) {
             return;
+        }
+
+        // Trim whitespace
+        {
+            const text = range.toString();
+            range.setStart(range.startContainer, range.startOffset + (text.match(/^\s+/)?.[0].length ?? 0));
+            range.setEnd(range.endContainer, range.endOffset - (text.match(/\s+$/)?.[0].length ?? 0));
         }
 
         const fragment = range.extractContents();
@@ -72,6 +81,7 @@ function Toolbar() {
             strong.append(fragment);
 
             range.insertNode(strong);
+            range.selectNode(strong);
         }
     };
 
@@ -87,7 +97,7 @@ function Toolbar() {
 }
 
 function SearchAndReplace() {
-    const { mutate, source } = useEditor();
+    const { source } = useEditor();
     const [replacement, setReplacement] = createSignal('');
     const [term, setTerm] = createSignal('');
     const [caseInsensitive, setCaseInsensitive] = createSignal(true);
@@ -104,7 +114,9 @@ function SearchAndReplace() {
         const form = e.target as HTMLFormElement;
         form.reset();
 
-        mutate(text => text.replaceAll(query(), replacement()));
+        console.log(source.queryResults);
+
+        // mutate(text => text.replaceAll(query(), replacement()));
     };
 
     return <form on:submit={replace} class={css.search} popover="manual">

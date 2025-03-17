@@ -1,6 +1,6 @@
 import { createEventListenerMap, DocumentEventListener, WindowEventListener } from "@solid-primitives/event-listener";
-import { Accessor, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
-import { createStore } from "solid-js/store";
+import { Accessor, createEffect, createMemo, createSignal, on, onCleanup, onMount, Setter } from "solid-js";
+import { createStore, produce } from "solid-js/store";
 import { isServer } from "solid-js/web";
 import { createMap } from './map';
 import { unified } from "unified";
@@ -10,6 +10,7 @@ export type SelectFunction = (range: Range) => void;
 type Editor = { select: SelectFunction, readonly selection: Accessor<Range | undefined> };
 
 interface EditorStoreType {
+    text: string;
     isComposing: boolean;
     selection: Range | undefined;
     characterBounds: DOMRect[];
@@ -17,7 +18,7 @@ interface EditorStoreType {
     selectionBounds: DOMRect;
 }
 
-export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>): Editor {
+export function createEditor(ref: Accessor<Element | undefined>, value: Accessor<string>, setValue: (next: string) => any): Editor {
     if (isServer) {
         return {
             select() { },
@@ -29,14 +30,8 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         throw new Error('`EditContext` is not implemented');
     }
 
-    const context = new EditContext({
-        text: value(),
-    });
-
-    const mutations = observe(ref);
-    const ast = createMemo(() => parse(value()));
-    const indexMap = createMap(ref, ast);
     const [store, setStore] = createStore<EditorStoreType>({
+        text: value(),
         isComposing: false,
         selection: undefined,
 
@@ -46,18 +41,52 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
         selectionBounds: new DOMRect(),
     });
 
-    createEffect(on(mutations, () => {
-        const selection = store.selection;
+    const context = new EditContext({
+        text: store.text,
+    });
 
-        if (selection === undefined) {
-            return
-        }
+    const mutations = observe(ref);
+    const ast = createMemo(() => parse(store.text));
+    const indexMap = createMap(ref, ast);
+
+    createEffect(() => {
+        setValue(store.text);
+    });
+
+    // createEffect(() => {
+    //     const selection = store.selection;
+
+    //     if (!selection) {
+    //         return;
+    //     }
+
+    //     console.log(indexMap.query(selection));
+    // });
+
+    createEffect(on(() => [ref(), ast()], () => {
+        console.log('pre rerender?');
+        const selection = store.selection;
+        const indices = selection ? indexMap.query(selection) : [];
 
         queueMicrotask(() => {
-            console.log(selection);
-
-            updateSelection(selection);
+            console.log('post rerender?');
+            console.log(indices);
         });
+    }));
+
+    createEffect(on(value, value => {
+        if (value !== store.text) {
+            setStore('text', value);
+        }
+    }));
+
+    createEffect(on(mutations, ([root, mutations]) => {
+        const text = (root! as HTMLElement).innerHTML;
+
+        if (text !== store.text) {
+            context.updateText(0, context.text.length, text);
+            setStore('text', context.text);
+        }
     }));
 
     createEventListenerMap<any>(context, {
@@ -68,6 +97,7 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
                 return;
             }
 
+            selection.extractContents();
             selection.insertNode(document.createTextNode(e.text));
             selection.collapse();
         },
@@ -99,8 +129,6 @@ export function createEditor(ref: Accessor<Element | undefined>, value: Accessor
 
     function updateSelection(range: Range) {
         const [start, end] = indexMap.query(range);
-
-        console.log(start, end, range);
 
         if (!start || !end) {
             return;

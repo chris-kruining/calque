@@ -8,17 +8,21 @@ export type IndexMap = IndexNode[];
 export type IndexRange = [IndexNode, IndexNode] | [undefined, undefined];
 
 export function createMap(root: Accessor<Element | undefined>, ast: Accessor<Root>) {
-    const mapping = createMemo(() => {
+    const [mapping, setMapping] = createSignal(new WeakMap());
+
+    createEffect(() => {
         const node = root();
         const tree = ast();
 
         if (node === undefined) {
-            return new WeakMap();
+            return;
         }
 
-        console.warn('recalculating map');
-
-        return createMapping(node, tree);
+        // Delay the recalculation a bit to give other code a chance to update the DOM.
+        // This -hopefully- prevents the map from getting out of sync
+        queueMicrotask(() => {
+            setMapping(createMapping(node, tree));
+        });
     });
 
     return {
