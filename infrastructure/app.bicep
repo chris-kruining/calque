@@ -9,7 +9,7 @@ param registryUrl string
 
 var appName = 'app'
 
-resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource environment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: 'cea-${context.locationAbbreviation}-${context.environment}-${context.projectName}'
   location: context.location
   properties: {
