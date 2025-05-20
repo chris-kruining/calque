@@ -59,5 +59,8 @@
     "version": "vinxi version",
     "test": "vitest --coverage",
     "test:ci": "vitest run"
+  },
+  "patchedDependencies": {
+    "@tanstack/directive-functions-plugin@1.119.2": "patches/@tanstack%2Fdirective-functions-plugin@1.119.2.patch"
   }
 }

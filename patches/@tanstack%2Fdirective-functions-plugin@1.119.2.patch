@@ -1,0 +1,14 @@
+diff --git a/dist/esm/index.js b/dist/esm/index.js
+index 813fa63450583316c537cadd46db0c6fce055ac7..205b03d0ae77bfe3ee93f42b0e3d4b5f453502ec 100644
+--- a/dist/esm/index.js
++++ b/dist/esm/index.js
+@@ -13,6 +13,9 @@ function TanStackDirectiveFunctionsPlugin(opts) {
+       ROOT = config.root;
+     },
+     transform(code, id) {
++      if (id.startsWith('/@')) {
++        id = `@/${id.slice(2)}`;
++      }
+       var _a;
+       const url = pathToFileURL(id);
+       url.searchParams.delete("v");
