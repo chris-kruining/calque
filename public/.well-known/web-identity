@@ -1,0 +1,5 @@
+{
+  "provider_urls": [
+    "http://localhost:3000/fedcm.json"
+  ]
+}
