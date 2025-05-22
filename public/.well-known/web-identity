@@ -1,5 +1,5 @@
 {
   "provider_urls": [
-    "http://localhost:3000/fedcm.json"
+    "http://localhost:3000/auth/idp/api/config"
   ]
 }

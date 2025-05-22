@@ -1,15 +1,11 @@
 import { json } from "@solidjs/router";
 import { APIEvent } from "@solidjs/start/server";
-import { assertApiSession, assertCsrf, use, User } from "~/features/auth";
+import { assertApiSession, use } from "~/features/auth";
 
-export const GET = use(assertCsrf, assertApiSession, async ({ locals }: APIEvent) => {
+export const GET = use(assertApiSession, async ({ locals }: APIEvent) => {
     const { user } = locals;
-    
-    console.log('accounts endpoint', user);
 
     return json({
-        accounts: [
-            {
                 id: user.id,
                 given_name: user.givenName,
                 name: `${user.givenName} ${user.familyName}`,
@@ -17,7 +13,5 @@ export const GET = use(assertCsrf, assertApiSession, async ({ locals }: APIEvent
                 picture: user.picture,
                 login_hints: [user.username],
                 approved_clients: user.approvedClients,
-            }
-        ],
     });
 });

@@ -14,10 +14,10 @@ export interface User {
 }
 
 const USERS: User[] = [
-    { id: '20d701f3-0f9f-4c21-a379-81b49f755f9e', username: 'chris', credential: 'test', givenName: 'Chris', familyName: 'Kruining', picture: '', approvedClients: [] },
-    { id: '10199201-1564-47db-b67b-07088ff05de8', username: 'john', credential: 'test', givenName: 'John', familyName: 'Doe', picture: '', approvedClients: [] },
-    { id: '633c44b3-8d3d-4dd1-8e1c-7de355d6dced', username: 'chris_alt', credential: 'test', givenName: 'Chris', familyName: 'Kruining', picture: '', approvedClients: [] },
-    { id: 'b9759798-8a41-4961-94a6-feb2372de9cf', username: 'john_alt', credential: 'test', givenName: 'John', familyName: 'Doe', picture: '', approvedClients: [] },
+    { id: '20d701f3-0f9f-4c21-a379-81b49f755f9e', username: 'chris', credential: 'test', givenName: 'Chris', familyName: 'Kruining', picture: '', approvedClients: [ '/auth/client' ] },
+    { id: '10199201-1564-47db-b67b-07088ff05de8', username: 'john', credential: 'test', givenName: 'John', familyName: 'Doe', picture: '', approvedClients: [ '/auth/client' ] },
+    { id: '633c44b3-8d3d-4dd1-8e1c-7de355d6dced', username: 'chris_alt', credential: 'test', givenName: 'Chris', familyName: 'Kruining', picture: '', approvedClients: [ '/auth/client' ] },
+    { id: 'b9759798-8a41-4961-94a6-feb2372de9cf', username: 'john_alt', credential: 'test', givenName: 'John', familyName: 'Doe', picture: '', approvedClients: [ '/auth/client' ] },
 ];
 
 export const getUser = (idOrUsername: string) => {
@@ -41,9 +41,13 @@ export const signOut = async () => {
 };
 
 export const use = (...middlewares: Middleware[]) => {
-    return (event: APIEvent) => {
+    return async (event: APIEvent) => {
+        console.log(`received ${event.request.url}`);
+
         for (const handler of middlewares) {
-            const response = handler(event);
+            const response = await handler(event);
+
+            console.log(response?.status);
 
             if (response !== undefined) {
                 return response;
@@ -76,6 +80,8 @@ export const assertApiSession = async ({ request, locals }: APIEvent) => {
     const user = await getSession();
 
     if (user === undefined) {
+        console.log('user session not available');
+
         return json({ error: 'not signed in' }, { status: 401 });
     }
 

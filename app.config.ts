@@ -4,29 +4,14 @@ import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
     vite: {
-        resolve: {
-            alias: [
-                { find: '@', replacement: 'F:\\Github\\calque\\node_modules\\' },
-            ],
-        },
         html: {
             cspNonce: 'KAAS_IS_AWESOME',
         },
-        // css: {
-        //     postcss: {
-        //     },
-        // },
         plugins: [
             devtools({
                 autoname: true,
             }),
             solidSvg(),
-            {
-                name: 'temp',
-                configResolved(config) {
-                    console.log(config.resolve.alias);
-                },
-            }
         ],
     },
     solid: {

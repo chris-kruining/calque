@@ -3,6 +3,8 @@ import { APIEvent } from "@solidjs/start/server";
 import { getUser, signIn } from "~/features/auth";
 
 export const POST = async ({ request }: APIEvent) => {
+    console.log('login requested', request.url);
+    
     const formData = await request.formData();
     const username = formData.get('username');
     const password = formData.get('password');
@@ -27,7 +29,9 @@ export const POST = async ({ request }: APIEvent) => {
 
     await signIn(user);
 
-    return redirect('/auth/client', {
+    const token = 'THIS IS MY AWESOME TOKEN';
+
+    return json({ token }, {
         headers: {
             'Set-Login': 'logged-in',
         }

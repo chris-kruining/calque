@@ -2,26 +2,30 @@ import { onMount } from "solid-js";
 
 export default function Index() {
     onMount(async () => {
-        try {
-            // navigator.login.setStatus('logged-in');
+        const user = await fetch('/auth/idp/api/user-info').then(r => r.json());
 
-            const credential = await navigator.credentials.get({
-                identity: {
-                    providers: [{
-                        configURL: new URL('http://localhost:3000/fedcm.json'),
-                        clientId: '/auth/client',
-                        nonce: 'kaas',
-                        loginHint: 'chris',
-                    }],
-                    mode: 'passive',
-                    context: undefined,
-                },
-                mediation: undefined,
-            });
+        console.log(user);
 
-            console.log(credential);
-        } catch(e) {
-            console.error(e);
+        if (user === undefined || true) {
+            try {
+                const credential = await navigator.credentials.get({
+                    identity: {
+                        providers: [{
+                            configURL: new URL('http://localhost:3000/auth/idp/api/config'),
+                            clientId: '/auth/client',
+                            nonce: 'kaas',
+                            loginHint: 'chris',
+                        }],
+                        mode: 'passive',
+                        context: undefined,
+                    },
+                    mediation: 'silent',
+                });
+
+                console.log(credential);
+            } catch(e) {
+                console.error(e);
+            }
         }
     });
 
