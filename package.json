@@ -35,7 +35,7 @@
     "vinxi": "^0.5.3"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^17.0.3",
+    "@happy-dom/global-registrator": "^18.0.0",
     "@sinonjs/fake-timers": "^14.0.0",
     "@solidjs/testing-library": "^0.8.10",
     "@testing-library/jest-dom": "^6.6.3",
