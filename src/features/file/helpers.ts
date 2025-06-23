@@ -12,7 +12,7 @@ interface Contents extends Map<string, Map<string, string>> { }
 
 export const read = (file: File): Promise<Map<string, string> | undefined> => {
     switch (file.type) {
-        case 'application/json': return json.load(file.stream());
+        case 'application/json': return json.load(file.text());
 
         default: return Promise.resolve(undefined);
     }
