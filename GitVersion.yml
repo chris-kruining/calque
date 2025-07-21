@@ -1,7 +1,7 @@
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatchTag
 assembly-informational-format: "{InformationalVersion}"
-mode: Mainline
+mode: ContinuesDeployment
 tag-prefix: "[vV]"
 continuous-delivery-fallback-tag: ci
 major-version-bump-message: '\+semver:\s?(breaking|major)'
