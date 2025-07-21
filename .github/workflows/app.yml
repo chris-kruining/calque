@@ -84,13 +84,13 @@ jobs:
           subscription-id: ${{ secrets.CALQUE_PRD_SUBSCRIPTION_ID }}
 
       - name: Deploy bicep
-        uses: Azure/cli@v2
+        uses: azure/cli@v2
         with:
-          azcliversion: 2.66.0
-          inlineScript: |
-            az deployment sub create \
-              --location westeurope \
-              --template-file infrastructure/main.bicep \
-              --parameters infrastructure/params/${{ matrix.environment }}.bicepparam \
-              --parameters version=${{needs.versionize.outputs.semver}} \
+          azcliversion: 2.75.0
+          inlineScript: >-
+            az deployment sub create
+              --location westeurope
+              --template-file infrastructure/main.bicep
+              --parameters infrastructure/params/${{ matrix.environment }}.bicepparam
+              --parameters version=${{needs.versionize.outputs.semver}}
               --parameters registryUrl=${{ secrets.ACR_LOGIN_SERVER }}
